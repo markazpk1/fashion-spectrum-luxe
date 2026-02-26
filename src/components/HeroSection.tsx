@@ -13,7 +13,7 @@ const HeroSection = () => {
   const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   return (
-    <section ref={sectionRef} className="relative h-[85vh] md:h-screen overflow-hidden">
+    <section ref={sectionRef} className="relative h-[60vh] md:h-[75vh] overflow-hidden">
       <motion.img
         src={heroBanner}
         alt="FashionSpectrum luxury resort wear collection"
