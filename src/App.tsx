@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { AnimatePresence } from "framer-motion";
+import Lenis from "lenis";
 import CartDrawer from "@/components/CartDrawer";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import SearchOverlay from "@/components/SearchOverlay";
@@ -28,6 +30,21 @@ const AnimatedRoutes = () => {
   const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
 
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    return () => lenis.destroy();
+  }, []);
   return (
     <>
       <CartDrawer />
