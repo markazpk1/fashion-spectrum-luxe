@@ -94,19 +94,22 @@ const Footer = () => {
             </ul>
           </CollapsibleSection>
         ))}
-        <CollapsibleSection title="Follow Us">
-          <div className="flex gap-4">
-            <a href="#" className="text-primary-foreground/50 hover:text-gold transition-colors" aria-label="Instagram">
-              <Instagram size={20} />
-            </a>
-            <a href="#" className="text-primary-foreground/50 hover:text-gold transition-colors" aria-label="Facebook">
-              <Facebook size={20} />
-            </a>
-            <a href="#" className="text-primary-foreground/50 hover:text-gold transition-colors" aria-label="Twitter">
-              <Twitter size={20} />
-            </a>
-          </div>
-        </CollapsibleSection>
+      </div>
+
+      {/* Social Icons - Always visible, centered */}
+      <div className="flex flex-col items-center gap-3 py-8 px-6">
+        <h4 className="font-body text-xs tracking-[0.2em] uppercase text-primary-foreground/80">Follow Us</h4>
+        <div className="flex gap-5">
+          <a href="#" className="text-primary-foreground/50 hover:text-gold transition-colors duration-300" aria-label="Instagram">
+            <Instagram size={20} />
+          </a>
+          <a href="#" className="text-primary-foreground/50 hover:text-gold transition-colors duration-300" aria-label="Facebook">
+            <Facebook size={20} />
+          </a>
+          <a href="#" className="text-primary-foreground/50 hover:text-gold transition-colors duration-300" aria-label="Twitter">
+            <Twitter size={20} />
+          </a>
+        </div>
       </div>
 
       {/* Bottom */}
