@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -16,14 +16,27 @@ interface ProductSectionProps {
 const ProductSection = ({ title, products, id, viewAllLabel = "View All", viewAllLink = "/shop" }: ProductSectionProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const scroll = (direction: "left" | "right") => {
+  const scroll = useCallback((direction: "left" | "right") => {
     if (!scrollRef.current) return;
-    const amount = scrollRef.current.clientWidth * 0.7;
-    scrollRef.current.scrollBy({
-      left: direction === "left" ? -amount : amount,
-      behavior: "smooth",
-    });
-  };
+    const container = scrollRef.current;
+    const amount = container.clientWidth * 0.7;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    const atEnd = container.scrollLeft >= maxScroll - 5;
+
+    if (direction === "right" && atEnd) {
+      container.scrollTo({ left: 0, behavior: "smooth" });
+    } else {
+      container.scrollBy({
+        left: direction === "left" ? -amount : amount,
+        behavior: "smooth",
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => scroll("right"), 5000);
+    return () => clearInterval(timer);
+  }, [scroll]);
 
   return (
     <section id={id} className="py-16 md:py-24 px-6 md:px-16">
@@ -61,8 +74,8 @@ const ProductSection = ({ title, products, id, viewAllLabel = "View All", viewAl
         </motion.div>
       </div>
 
-      {/* Mobile navigation arrows */}
-      <div className="flex md:hidden items-center justify-center gap-4 mt-4">
+      {/* Mobile navigation arrows - right aligned */}
+      <div className="flex md:hidden items-center justify-end gap-3 mb-4 pr-1">
         <button
           onClick={() => scroll("left")}
           className="border border-border p-2.5 rounded-full hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300 active:scale-95"
