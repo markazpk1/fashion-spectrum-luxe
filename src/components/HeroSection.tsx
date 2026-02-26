@@ -29,13 +29,32 @@ const HeroSection = () => {
     setCurrent((prev) => (prev + 1) % slides.length);
   }, []);
 
+  const prev = useCallback(() => {
+    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+  }, []);
+
   useEffect(() => {
     const timer = setInterval(next, 4500);
     return () => clearInterval(timer);
   }, [next]);
 
   return (
-    <section ref={sectionRef} className="relative h-[60vh] md:h-[75vh] overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="relative h-[60vh] md:h-[75vh] overflow-hidden touch-pan-y"
+      onTouchStart={(e) => {
+        const touch = e.touches[0];
+        sectionRef.current?.setAttribute("data-touch-x", String(touch.clientX));
+      }}
+      onTouchEnd={(e) => {
+        const startX = Number(sectionRef.current?.getAttribute("data-touch-x") || 0);
+        const endX = e.changedTouches[0].clientX;
+        const diff = startX - endX;
+        if (Math.abs(diff) > 50) {
+          diff > 0 ? next() : prev();
+        }
+      }}
+    >
       <AnimatePresence initial={false}>
         <motion.img
           key={current}
