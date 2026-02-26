@@ -9,7 +9,7 @@ import { newArrivals, saleProducts, bestSellers } from "@/lib/products";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-mobile-nav">
       <AnnouncementBar />
       <Navbar />
       <HeroSection />

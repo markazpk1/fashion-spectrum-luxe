@@ -76,7 +76,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               className={`p-2 transition-all duration-300 shadow-sm ${
                 wishlisted
                   ? "bg-primary text-primary-foreground"
-                  : "bg-background/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 hover:bg-primary hover:text-primary-foreground"
+                  : "bg-background/90 backdrop-blur-sm opacity-100 lg:opacity-0 lg:group-hover:opacity-100 translate-x-0 lg:translate-x-2 lg:group-hover:translate-x-0 hover:bg-primary hover:text-primary-foreground"
               }`}
               aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
             >
@@ -84,7 +84,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             </button>
             <Link
               to={`/product/${slugify(product.name)}`}
-              className="bg-background/90 backdrop-blur-sm p-2 hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
+              className="bg-background/90 backdrop-blur-sm p-2 hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm opacity-100 lg:opacity-0 lg:group-hover:opacity-100 translate-x-0 lg:translate-x-2 lg:group-hover:translate-x-0"
               aria-label="View product"
             >
               <Eye size={15} />
@@ -92,7 +92,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           </div>
 
           {/* Quick add */}
-          <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
+          <div className="absolute bottom-0 left-0 right-0 translate-y-0 lg:translate-y-full lg:group-hover:translate-y-0 transition-transform duration-500 ease-out">
             <button
               onClick={handleQuickAdd}
               className="w-full bg-charcoal/90 backdrop-blur-sm text-primary-foreground font-body text-xs tracking-[0.2em] uppercase py-3.5 hover:bg-primary transition-colors duration-300"

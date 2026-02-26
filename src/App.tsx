@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import CartDrawer from "@/components/CartDrawer";
+import MobileBottomNav from "@/components/MobileBottomNav";
+import SearchOverlay from "@/components/SearchOverlay";
+import { useState } from "react";
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import Collections from "./pages/Collections";
@@ -19,6 +22,30 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  return (
+    <>
+      <CartDrawer />
+      <MobileBottomNav onSearchOpen={() => setSearchOpen(true)} />
+      <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/collections" element={<Collections />} />
+        <Route path="/new-arrivals" element={<NewArrivals />} />
+        <Route path="/sale" element={<Sale />} />
+        <Route path="/best-sellers" element={<BestSellers />} />
+        <Route path="/product/:slug" element={<ProductDetail />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -27,19 +54,7 @@ const App = () => (
       <BrowserRouter>
         <WishlistProvider>
           <CartProvider>
-            <CartDrawer />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/collections" element={<Collections />} />
-              <Route path="/new-arrivals" element={<NewArrivals />} />
-              <Route path="/sale" element={<Sale />} />
-              <Route path="/best-sellers" element={<BestSellers />} />
-              <Route path="/product/:slug" element={<ProductDetail />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/wishlist" element={<Wishlist />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AppContent />
           </CartProvider>
         </WishlistProvider>
       </BrowserRouter>
