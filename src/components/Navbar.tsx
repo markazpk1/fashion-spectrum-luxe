@@ -24,8 +24,8 @@ const Navbar = () => {
   return (
     <>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto flex items-center justify-center lg:justify-between px-4 sm:px-6 py-3 sm:py-4">
-          {/* Spacer for mobile centering */}
+        <div className="container mx-auto flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
+          {/* Mobile menu button - hidden since we have bottom nav */}
 
           <Link to="/" className="font-heading text-xl sm:text-2xl md:text-3xl font-semibold tracking-wider text-primary uppercase">
             FashionSpectrum
@@ -49,7 +49,7 @@ const Navbar = () => {
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => setSearchOpen(true)}
               className="text-foreground hover:text-primary transition-colors"
