@@ -1,9 +1,22 @@
-import { useRef, useEffect, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import heroBanner from "@/assets/hero-banner.jpg";
+import { useRef, useEffect, useState, useCallback } from "react";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import heroKaftan1 from "@/assets/hero-kaftan-1.jpg";
+import heroKaftan2 from "@/assets/hero-kaftan-2.jpg";
+import heroKaftan3 from "@/assets/hero-kaftan-3.jpg";
+import heroKaftan4 from "@/assets/hero-kaftan-4.jpg";
+import heroKaftan5 from "@/assets/hero-kaftan-5.jpg";
+
+const slides = [
+  { src: heroKaftan1, alt: "Luxurious jewel-toned kaftan collection" },
+  { src: heroKaftan2, alt: "Black and gold embroidered kaftan" },
+  { src: heroKaftan3, alt: "Turquoise and gold ornate kaftan" },
+  { src: heroKaftan4, alt: "White and gold bridal kaftan" },
+  { src: heroKaftan5, alt: "Crimson embroidered kaftan" },
+];
 
 const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
+  const [current, setCurrent] = useState(0);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
@@ -12,16 +25,32 @@ const HeroSection = () => {
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
+  const next = useCallback(() => {
+    setCurrent((prev) => (prev + 1) % slides.length);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(next, 4500);
+    return () => clearInterval(timer);
+  }, [next]);
+
   return (
     <section ref={sectionRef} className="relative h-[60vh] md:h-[75vh] overflow-hidden">
-      <motion.img
-        src={heroBanner}
-        alt="FashionSpectrum luxury resort wear collection"
-        className="absolute inset-0 w-full h-full object-cover object-center"
-        style={{ y }}
-      />
+      <AnimatePresence mode="wait">
+        <motion.img
+          key={current}
+          src={slides[current].src}
+          alt={slides[current].alt}
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          style={{ y }}
+        />
+      </AnimatePresence>
       <div className="absolute inset-0 bg-gradient-to-r from-charcoal/40 via-transparent to-transparent" />
-      
+
       <motion.div
         className="relative h-full flex items-end pb-16 md:pb-24 px-6 md:px-16"
         style={{ opacity }}
@@ -46,7 +75,7 @@ const HeroSection = () => {
               transition={{ duration: 0.8, delay: 0.8 }}
               className="font-semibold italic"
             >
-              Resort Wear
+              Kaftan Collection
             </motion.span>
           </motion.h1>
           <motion.p
@@ -70,6 +99,20 @@ const HeroSection = () => {
           </motion.a>
         </motion.div>
       </motion.div>
+
+      {/* Slide indicators */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+        {slides.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              i === current ? "bg-primary-foreground w-6" : "bg-primary-foreground/40"
+            }`}
+            aria-label={`Go to slide ${i + 1}`}
+          />
+        ))}
+      </div>
     </section>
   );
 };
