@@ -18,6 +18,7 @@ const Index = () => {
         id="new-arrivals"
         title="New Arrivals"
         products={newArrivals}
+        viewAllLink="/new-arrivals"
       />
 
       <CollectionBanner />
@@ -26,12 +27,14 @@ const Index = () => {
         id="sale"
         title="Summer Sale"
         products={saleProducts}
+        viewAllLink="/sale"
       />
 
       <section id="best-sellers">
         <ProductSection
           title="Best Sellers"
           products={bestSellers}
+          viewAllLink="/best-sellers"
         />
       </section>
 

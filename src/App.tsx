@@ -6,6 +6,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import CartDrawer from "@/components/CartDrawer";
 import Index from "./pages/Index";
+import Shop from "./pages/Shop";
+import Collections from "./pages/Collections";
+import NewArrivals from "./pages/NewArrivals";
+import Sale from "./pages/Sale";
+import BestSellers from "./pages/BestSellers";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
@@ -22,9 +27,13 @@ const App = () => (
           <CartDrawer />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/collections" element={<Collections />} />
+            <Route path="/new-arrivals" element={<NewArrivals />} />
+            <Route path="/sale" element={<Sale />} />
+            <Route path="/best-sellers" element={<BestSellers />} />
             <Route path="/product/:slug" element={<ProductDetail />} />
             <Route path="/checkout" element={<Checkout />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </CartProvider>
