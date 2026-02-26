@@ -5,18 +5,17 @@ import { Link, useLocation } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 
 const navLinks = [
-  { label: "Shop", href: "/#new-arrivals" },
-  { label: "Collections", href: "/#collections" },
-  { label: "New Arrivals", href: "/#new-arrivals" },
-  { label: "Sale", href: "/#sale" },
-  { label: "Best Sellers", href: "/#best-sellers" },
+  { label: "Shop", to: "/shop" },
+  { label: "Collections", to: "/collections" },
+  { label: "New Arrivals", to: "/new-arrivals" },
+  { label: "Sale", to: "/sale" },
+  { label: "Best Sellers", to: "/best-sellers" },
 ];
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { openCart, totalItems } = useCart();
   const location = useLocation();
-  const isHome = location.pathname === "/";
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -35,15 +34,19 @@ const Navbar = () => {
 
         <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.label}
-              href={isHome ? link.href.replace("/", "") : link.href}
+              to={link.to}
               className={`font-body text-sm tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary ${
-                link.label === "Sale" ? "text-sale font-medium" : "text-foreground"
+                link.label === "Sale"
+                  ? "text-sale font-medium"
+                  : location.pathname === link.to
+                  ? "text-primary"
+                  : "text-foreground"
               }`}
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -83,16 +86,16 @@ const Navbar = () => {
           >
             <div className="flex flex-col py-4 px-6 gap-4">
               {navLinks.map((link) => (
-                <a
+                <Link
                   key={link.label}
-                  href={isHome ? link.href.replace("/", "") : link.href}
+                  to={link.to}
                   onClick={() => setMobileOpen(false)}
                   className={`font-body text-sm tracking-[0.15em] uppercase ${
                     link.label === "Sale" ? "text-sale font-medium" : "text-foreground"
                   }`}
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
             </div>
           </motion.nav>

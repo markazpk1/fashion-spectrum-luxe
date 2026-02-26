@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import type { Product } from "@/lib/products";
 
@@ -9,9 +10,10 @@ interface ProductSectionProps {
   products: Product[];
   id?: string;
   viewAllLabel?: string;
+  viewAllLink?: string;
 }
 
-const ProductSection = ({ title, products, id, viewAllLabel = "View All" }: ProductSectionProps) => {
+const ProductSection = ({ title, products, id, viewAllLabel = "View All", viewAllLink = "/shop" }: ProductSectionProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: "left" | "right") => {
@@ -77,12 +79,12 @@ const ProductSection = ({ title, products, id, viewAllLabel = "View All" }: Prod
         transition={{ duration: 0.5, delay: 0.4 }}
         className="text-center mt-10"
       >
-        <a
-          href="#"
+        <Link
+          to={viewAllLink}
           className="inline-block font-body text-xs tracking-[0.2em] uppercase border-b border-foreground pb-1 text-foreground hover:text-primary hover:border-primary transition-colors duration-300"
         >
           {viewAllLabel}
-        </a>
+        </Link>
       </motion.div>
     </section>
   );
