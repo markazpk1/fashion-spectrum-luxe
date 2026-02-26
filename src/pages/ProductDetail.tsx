@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Heart, Minus, Plus, Truck, RotateCcw, Shield } from "lucide-react";
+import { Heart, Minus, Plus, Truck, RotateCcw, Shield } from "lucide-react";
 import { getProductBySlug, getRelatedProducts } from "@/lib/productUtils";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -15,6 +16,7 @@ const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const product = getProductBySlug(slug || "");
   const { addItem } = useCart();
+  const { toggleItem, isInWishlist } = useWishlist();
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -22,9 +24,9 @@ const ProductDetail = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <div className="text-center">
-          <h1 className="font-heading text-4xl text-foreground mb-4">Product Not Found</h1>
+          <h1 className="font-heading text-3xl md:text-4xl text-foreground mb-4">Product Not Found</h1>
           <Link to="/" className="font-body text-xs tracking-[0.2em] uppercase text-primary hover:text-foreground transition-colors">
             ← Back to Shop
           </Link>
@@ -33,8 +35,8 @@ const ProductDetail = () => {
     );
   }
 
+  const wishlisted = isInWishlist(product.id);
   const related = getRelatedProducts(product);
-  // Simulate gallery with same image rotated/styled
   const galleryImages = [product.image, product.image, product.image, product.image];
 
   const handleAddToCart = () => {
@@ -56,19 +58,19 @@ const ProductDetail = () => {
       <Navbar />
 
       {/* Breadcrumb */}
-      <div className="px-6 md:px-16 py-4">
+      <div className="px-4 sm:px-6 md:px-16 py-4">
         <div className="flex items-center gap-2 font-body text-[10px] tracking-[0.15em] uppercase text-muted-foreground">
           <Link to="/" className="hover:text-primary transition-colors">Home</Link>
           <span>/</span>
-          <span className="text-foreground">{product.name}</span>
+          <span className="text-foreground truncate">{product.name}</span>
         </div>
       </div>
 
       {/* Product */}
-      <section className="px-6 md:px-16 pb-16 md:pb-24">
-        <div className="grid md:grid-cols-2 gap-8 md:gap-16 max-w-7xl mx-auto">
+      <section className="px-4 sm:px-6 md:px-16 pb-16 md:pb-24">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-16 max-w-7xl mx-auto">
           {/* Image Gallery */}
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             <motion.div
               key={selectedImageIndex}
               initial={{ opacity: 0 }}
@@ -82,12 +84,12 @@ const ProductDetail = () => {
                 className="w-full h-full object-cover"
               />
             </motion.div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 md:gap-3">
               {galleryImages.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setSelectedImageIndex(i)}
-                  className={`w-20 h-24 overflow-hidden border-2 transition-all duration-300 ${
+                  className={`w-16 h-20 md:w-20 md:h-24 overflow-hidden border-2 transition-all duration-300 ${
                     selectedImageIndex === i ? "border-primary" : "border-transparent hover:border-border"
                   }`}
                 >
@@ -107,15 +109,15 @@ const ProductDetail = () => {
               <p className="font-body text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
                 {product.category}
               </p>
-              <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-light text-foreground mb-4">
+              <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-foreground mb-4">
                 {product.name}
               </h1>
 
               <div className="flex items-center gap-3 mb-6">
-                <span className="font-heading text-2xl text-foreground">${product.price.toFixed(2)}</span>
+                <span className="font-heading text-xl sm:text-2xl text-foreground">${product.price.toFixed(2)}</span>
                 {product.originalPrice && (
                   <>
-                    <span className="font-body text-lg text-muted-foreground line-through">
+                    <span className="font-body text-base sm:text-lg text-muted-foreground line-through">
                       ${product.originalPrice.toFixed(2)}
                     </span>
                     <span className="font-body text-xs bg-sale text-primary-foreground px-2 py-1">
@@ -144,7 +146,7 @@ const ProductDetail = () => {
                     <button
                       key={size}
                       onClick={() => { setSelectedSize(size); setSizeError(false); }}
-                      className={`w-14 h-10 border font-body text-xs tracking-wider transition-all duration-300 ${
+                      className={`w-12 h-10 sm:w-14 border font-body text-xs tracking-wider transition-all duration-300 ${
                         selectedSize === size
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border text-foreground hover:border-primary"
@@ -201,24 +203,29 @@ const ProductDetail = () => {
                   Add to Cart
                 </button>
                 <button
-                  className="border border-border p-4 hover:border-primary hover:text-primary transition-all duration-300"
-                  aria-label="Add to wishlist"
+                  onClick={() => toggleItem(product)}
+                  className={`border p-4 transition-all duration-300 ${
+                    wishlisted
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border hover:border-primary hover:text-primary"
+                  }`}
+                  aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
                 >
-                  <Heart size={20} />
+                  <Heart size={20} fill={wishlisted ? "currentColor" : "none"} />
                 </button>
               </div>
 
               {/* Trust badges */}
-              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4 pt-6 border-t border-border">
                 {[
                   { icon: Truck, label: "Free Shipping", sub: "Over $300" },
                   { icon: RotateCcw, label: "Easy Returns", sub: "30 Days" },
                   { icon: Shield, label: "Secure Payment", sub: "Encrypted" },
                 ].map(({ icon: Icon, label, sub }) => (
                   <div key={label} className="text-center">
-                    <Icon size={20} className="mx-auto text-muted-foreground mb-1" />
-                    <p className="font-body text-[10px] tracking-wider uppercase text-foreground">{label}</p>
-                    <p className="font-body text-[9px] text-muted-foreground">{sub}</p>
+                    <Icon size={18} className="mx-auto text-muted-foreground mb-1" />
+                    <p className="font-body text-[9px] sm:text-[10px] tracking-wider uppercase text-foreground">{label}</p>
+                    <p className="font-body text-[8px] sm:text-[9px] text-muted-foreground">{sub}</p>
                   </div>
                 ))}
               </div>
@@ -229,11 +236,11 @@ const ProductDetail = () => {
 
       {/* Related Products */}
       {related.length > 0 && (
-        <section className="px-6 md:px-16 pb-16 md:pb-24">
-          <h2 className="font-heading text-3xl md:text-4xl font-light text-foreground mb-10">
+        <section className="px-4 sm:px-6 md:px-16 pb-16 md:pb-24">
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-light text-foreground mb-8 md:mb-10">
             You May Also Like
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
             {related.map((p, i) => (
               <ProductCard key={p.id} product={p} index={i} />
             ))}

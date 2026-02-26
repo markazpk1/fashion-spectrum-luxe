@@ -3,6 +3,7 @@ import { Heart, Search, ShoppingBag, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import SearchOverlay from "./SearchOverlay";
 
 const navLinks = [
@@ -17,21 +18,22 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { openCart, totalItems } = useCart();
+  const { totalItems: wishlistCount } = useWishlist();
   const location = useLocation();
 
   return (
     <>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto flex items-center justify-between px-6 py-4">
+        <div className="container mx-auto flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
           <button
             className="lg:hidden text-foreground"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
-            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
 
-          <Link to="/" className="font-heading text-2xl md:text-3xl font-semibold tracking-wider text-primary uppercase">
+          <Link to="/" className="font-heading text-xl sm:text-2xl md:text-3xl font-semibold tracking-wider text-primary uppercase">
             FashionSpectrum
           </Link>
 
@@ -53,7 +55,7 @@ const Navbar = () => {
             ))}
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => setSearchOpen(true)}
               className="text-foreground hover:text-primary transition-colors"
@@ -61,9 +63,23 @@ const Navbar = () => {
             >
               <Search size={20} />
             </button>
-            <button className="hidden sm:block text-foreground hover:text-primary transition-colors" aria-label="Wishlist">
+            <Link
+              to="/wishlist"
+              className="relative text-foreground hover:text-primary transition-colors"
+              aria-label="Wishlist"
+            >
               <Heart size={20} />
-            </button>
+              {wishlistCount > 0 && (
+                <motion.span
+                  key={wishlistCount}
+                  initial={{ scale: 0.5 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1.5 -right-1.5 bg-sale text-primary-foreground text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-body"
+                >
+                  {wishlistCount}
+                </motion.span>
+              )}
+            </Link>
             <button
               onClick={openCart}
               className="relative text-foreground hover:text-primary transition-colors"
@@ -104,6 +120,13 @@ const Navbar = () => {
                     {link.label}
                   </Link>
                 ))}
+                <Link
+                  to="/wishlist"
+                  onClick={() => setMobileOpen(false)}
+                  className="font-body text-sm tracking-[0.15em] uppercase text-foreground"
+                >
+                  Wishlist ({wishlistCount})
+                </Link>
               </div>
             </motion.nav>
           )}
