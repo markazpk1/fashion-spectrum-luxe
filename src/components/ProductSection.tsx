@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import ProductCard from "./ProductCard";
 import type { Product } from "@/lib/products";
 
@@ -25,46 +26,64 @@ const ProductSection = ({ title, products, id, viewAllLabel = "View All" }: Prod
   return (
     <section id={id} className="py-16 md:py-24 px-6 md:px-16">
       <div className="flex items-end justify-between mb-10">
-        <h2 className="font-heading text-3xl md:text-5xl font-light text-foreground">
+        <motion.h2
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="font-heading text-3xl md:text-5xl font-light text-foreground"
+        >
           {title}
-        </h2>
-        <div className="hidden md:flex items-center gap-2">
+        </motion.h2>
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="hidden md:flex items-center gap-2"
+        >
           <button
             onClick={() => scroll("left")}
-            className="border border-border p-2 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
+            className="border border-border p-2 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300 active:scale-95"
             aria-label="Previous"
           >
             <ChevronLeft size={20} />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="border border-border p-2 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
+            className="border border-border p-2 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300 active:scale-95"
             aria-label="Next"
           >
             <ChevronRight size={20} />
           </button>
-        </div>
+        </motion.div>
       </div>
 
       <div
         ref={scrollRef}
-        className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-4"
+        className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
       >
         {products.map((product, i) => (
-          <div key={product.id} className="flex-shrink-0 w-[260px] md:w-[300px]">
+          <div key={product.id} className="flex-shrink-0 w-[260px] md:w-[300px] snap-start">
             <ProductCard product={product} index={i} />
           </div>
         ))}
       </div>
 
-      <div className="text-center mt-10">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="text-center mt-10"
+      >
         <a
           href="#"
           className="inline-block font-body text-xs tracking-[0.2em] uppercase border-b border-foreground pb-1 text-foreground hover:text-primary hover:border-primary transition-colors duration-300"
         >
           {viewAllLabel}
         </a>
-      </div>
+      </motion.div>
     </section>
   );
 };
