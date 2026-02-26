@@ -80,13 +80,13 @@ const Footer = () => {
       </div>
 
       {/* Links */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-0 md:gap-8 py-4 md:py-12 px-6 md:px-16 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-16 py-4 md:py-16 px-6 md:px-16 lg:px-24 max-w-5xl mx-auto">
         {footerSections.map((section) => (
           <CollapsibleSection key={section.title} title={section.title}>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {section.items.map((item) => (
                 <li key={item}>
-                  <a href="#" className="font-body text-xs text-primary-foreground/50 hover:text-gold transition-colors duration-300">
+                  <a href="#" className="font-body text-sm text-primary-foreground/50 hover:text-gold transition-colors duration-300">
                     {item}
                   </a>
                 </li>
