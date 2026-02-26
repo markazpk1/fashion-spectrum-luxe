@@ -25,13 +25,7 @@ const Navbar = () => {
     <>
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
-          <button
-            className="lg:hidden text-foreground"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          {/* Mobile menu button - hidden since we have bottom nav */}
 
           <Link to="/" className="font-heading text-xl sm:text-2xl md:text-3xl font-semibold tracking-wider text-primary uppercase">
             FashionSpectrum
