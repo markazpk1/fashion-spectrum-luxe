@@ -61,6 +61,24 @@ const ProductSection = ({ title, products, id, viewAllLabel = "View All", viewAl
         </motion.div>
       </div>
 
+      {/* Mobile navigation arrows */}
+      <div className="flex md:hidden items-center justify-center gap-4 mt-4">
+        <button
+          onClick={() => scroll("left")}
+          className="border border-border p-2.5 rounded-full hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300 active:scale-95"
+          aria-label="Previous"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <button
+          onClick={() => scroll("right")}
+          className="border border-border p-2.5 rounded-full hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300 active:scale-95"
+          aria-label="Next"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
       <div
         ref={scrollRef}
         className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
