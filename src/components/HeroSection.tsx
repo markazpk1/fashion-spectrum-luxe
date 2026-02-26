@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import heroKaftan1 from "@/assets/hero-kaftan-1.jpg";
 import heroKaftan2 from "@/assets/hero-kaftan-2.jpg";
 import heroKaftan3 from "@/assets/hero-kaftan-3.jpg";
@@ -55,19 +55,18 @@ const HeroSection = () => {
         }
       }}
     >
-      <AnimatePresence initial={false}>
+      {slides.map((slide, i) => (
         <motion.img
-          key={current}
-          src={slides[current].src}
-          alt={slides[current].alt}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1, ease: "easeInOut" }}
+          key={i}
+          src={slide.src}
+          alt={slide.alt}
+          initial={false}
+          animate={{ opacity: i === current ? 1 : 0 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
           className="absolute inset-0 w-full h-full object-cover object-top"
           style={{ y }}
         />
-      </AnimatePresence>
+      ))}
       <div className="absolute inset-0 bg-gradient-to-r from-charcoal/40 via-transparent to-transparent" />
 
       <motion.div
