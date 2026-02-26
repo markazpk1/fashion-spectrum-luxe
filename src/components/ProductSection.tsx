@@ -15,6 +15,7 @@ interface ProductSectionProps {
 
 const ProductSection = ({ title, products, id, viewAllLabel = "View All", viewAllLink = "/shop" }: ProductSectionProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isTouching = useRef(false);
 
   const scroll = useCallback((direction: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -34,8 +35,22 @@ const ProductSection = ({ title, products, id, viewAllLabel = "View All", viewAl
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => scroll("right"), 5000);
-    return () => clearInterval(timer);
+    const el = scrollRef.current;
+    if (!el) return;
+    const onTouchStart = () => { isTouching.current = true; };
+    const onTouchEnd = () => { isTouching.current = false; };
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    const timer = setInterval(() => {
+      if (!isTouching.current) scroll("right");
+    }, 5000);
+
+    return () => {
+      clearInterval(timer);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
   }, [scroll]);
 
   return (
