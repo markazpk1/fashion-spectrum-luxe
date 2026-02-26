@@ -7,6 +7,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import SearchOverlay from "./SearchOverlay";
 
 const navLinks = [
+  { label: "Home", to: "/" },
   { label: "Shop", to: "/shop" },
   { label: "Collections", to: "/collections" },
   { label: "New Arrivals", to: "/new-arrivals" },
@@ -29,16 +30,16 @@ const Navbar = () => {
             FashionSpectrum
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => (
+           <nav className="hidden lg:flex items-center gap-8">
+            {navLinks
+              .filter((link) => link.to !== location.pathname)
+              .map((link) => (
               <Link
                 key={link.label}
                 to={link.to}
                 className={`font-body text-sm tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary ${
                   link.label === "Sale"
                     ? "text-sale font-medium"
-                    : location.pathname === link.to
-                    ? "text-primary"
                     : "text-foreground"
                 }`}
               >
