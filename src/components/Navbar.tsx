@@ -1,22 +1,26 @@
 import { useState } from "react";
 import { Heart, Search, ShoppingBag, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link, useLocation } from "react-router-dom";
+import { useCart } from "@/contexts/CartContext";
 
 const navLinks = [
-  { label: "Shop", href: "#new-arrivals" },
-  { label: "Collections", href: "#collections" },
-  { label: "New Arrivals", href: "#new-arrivals" },
-  { label: "Sale", href: "#sale" },
-  { label: "Best Sellers", href: "#best-sellers" },
+  { label: "Shop", href: "/#new-arrivals" },
+  { label: "Collections", href: "/#collections" },
+  { label: "New Arrivals", href: "/#new-arrivals" },
+  { label: "Sale", href: "/#sale" },
+  { label: "Best Sellers", href: "/#best-sellers" },
 ];
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { openCart, totalItems } = useCart();
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="container mx-auto flex items-center justify-between px-6 py-4">
-        {/* Mobile menu button */}
         <button
           className="lg:hidden text-foreground"
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -25,17 +29,15 @@ const Navbar = () => {
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
-        {/* Logo */}
-        <a href="#" className="font-heading text-2xl md:text-3xl font-semibold tracking-wider text-primary uppercase">
+        <Link to="/" className="font-heading text-2xl md:text-3xl font-semibold tracking-wider text-primary uppercase">
           FashionSpectrum
-        </a>
+        </Link>
 
-        {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
             <a
               key={link.label}
-              href={link.href}
+              href={isHome ? link.href.replace("/", "") : link.href}
               className={`font-body text-sm tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary ${
                 link.label === "Sale" ? "text-sale font-medium" : "text-foreground"
               }`}
@@ -45,7 +47,6 @@ const Navbar = () => {
           ))}
         </nav>
 
-        {/* Icons */}
         <div className="flex items-center gap-4">
           <button className="text-foreground hover:text-primary transition-colors" aria-label="Search">
             <Search size={20} />
@@ -53,16 +54,24 @@ const Navbar = () => {
           <button className="hidden sm:block text-foreground hover:text-primary transition-colors" aria-label="Wishlist">
             <Heart size={20} />
           </button>
-          <button className="relative text-foreground hover:text-primary transition-colors" aria-label="Cart">
+          <button
+            onClick={openCart}
+            className="relative text-foreground hover:text-primary transition-colors"
+            aria-label="Cart"
+          >
             <ShoppingBag size={20} />
-            <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-body">
-              0
-            </span>
+            <motion.span
+              key={totalItems}
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-body"
+            >
+              {totalItems}
+            </motion.span>
           </button>
         </div>
       </div>
 
-      {/* Mobile Nav */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.nav
@@ -76,7 +85,7 @@ const Navbar = () => {
               {navLinks.map((link) => (
                 <a
                   key={link.label}
-                  href={link.href}
+                  href={isHome ? link.href.replace("/", "") : link.href}
                   onClick={() => setMobileOpen(false)}
                   className={`font-body text-sm tracking-[0.15em] uppercase ${
                     link.label === "Sale" ? "text-sale font-medium" : "text-foreground"
