@@ -39,7 +39,7 @@ const CatalogPage = ({ title, subtitle, products, bannerImage }: CatalogPageProp
   }, [products, activeCategory, sortBy]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-mobile-nav">
       <AnnouncementBar />
       <Navbar />
 

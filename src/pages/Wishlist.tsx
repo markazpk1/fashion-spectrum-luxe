@@ -11,7 +11,7 @@ const Wishlist = () => {
   const { items, clearWishlist } = useWishlist();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-mobile-nav">
       <AnnouncementBar />
       <Navbar />
 

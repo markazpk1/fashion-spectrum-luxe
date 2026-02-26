@@ -70,7 +70,7 @@ const Checkout = () => {
 
   if (items.length === 0 && step !== "confirmation") {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-mobile-nav">
         <AnnouncementBar />
         <Navbar />
         <div className="flex flex-col items-center justify-center py-32 px-6 text-center">
@@ -89,7 +89,7 @@ const Checkout = () => {
 
   if (step === "confirmation" && items.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-mobile-nav">
         <AnnouncementBar />
         <Navbar />
         <motion.div
@@ -141,7 +141,7 @@ const Checkout = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-mobile-nav">
       <AnnouncementBar />
       <Navbar />
 
