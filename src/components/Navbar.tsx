@@ -23,7 +23,7 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50 shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.08)]">
         <div className="container mx-auto flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
           <Link to="/" className="font-heading text-xl sm:text-2xl md:text-3xl font-semibold tracking-wider text-primary uppercase lg:flex-none absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0">
             FashionSpectrum
