@@ -45,7 +45,7 @@ const CatalogPage = ({ title, subtitle, products, bannerImage }: CatalogPageProp
 
       {/* Banner */}
       {bannerImage ? (
-        <div className="relative h-[30vh] md:h-[40vh] overflow-hidden">
+        <div className="relative h-[25vh] sm:h-[30vh] md:h-[40vh] overflow-hidden">
           <img src={bannerImage} alt={title} className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-charcoal/40" />
           <div className="relative h-full flex items-center justify-center text-center px-6">
@@ -73,7 +73,7 @@ const CatalogPage = ({ title, subtitle, products, bannerImage }: CatalogPageProp
         </div>
       </div>
 
-      <div className="px-6 md:px-16 py-8 md:py-12">
+      <div className="px-4 sm:px-6 md:px-16 py-8 md:py-12">
         {/* Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-2">

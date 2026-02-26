@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import type { Product } from "@/lib/products";
 import { slugify } from "@/lib/productUtils";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,8 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const { addItem } = useCart();
+  const { toggleItem, isInWishlist } = useWishlist();
+  const wishlisted = isInWishlist(product.id);
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
@@ -20,6 +23,12 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
     e.preventDefault();
     e.stopPropagation();
     addItem(product, "M");
+  };
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleItem(product);
   };
 
   return (
@@ -41,7 +50,6 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             loading="lazy"
           />
           
-          {/* Shimmer overlay on hover */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary-foreground/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
           
           {product.badge && (
@@ -62,17 +70,21 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           )}
 
           {/* Action buttons */}
-          <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+          <div className="absolute top-3 right-3 flex flex-col gap-2">
             <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              className="bg-background/90 backdrop-blur-sm p-2 hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm"
-              aria-label="Add to wishlist"
+              onClick={handleWishlist}
+              className={`p-2 transition-all duration-300 shadow-sm ${
+                wishlisted
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 hover:bg-primary hover:text-primary-foreground"
+              }`}
+              aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
             >
-              <Heart size={15} />
+              <Heart size={15} fill={wishlisted ? "currentColor" : "none"} />
             </button>
             <Link
               to={`/product/${slugify(product.name)}`}
-              className="bg-background/90 backdrop-blur-sm p-2 hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm"
+              className="bg-background/90 backdrop-blur-sm p-2 hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
               aria-label="View product"
             >
               <Eye size={15} />

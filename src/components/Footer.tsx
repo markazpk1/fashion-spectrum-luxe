@@ -10,7 +10,7 @@ const Footer = () => {
           <p className="font-body text-xs text-primary-foreground/60 tracking-wide mb-6">
             Subscribe for exclusive access to new collections, special offers & more.
           </p>
-          <div className="flex">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
             <input
               type="email"
               placeholder="Enter your email"

@@ -74,7 +74,7 @@ const SearchOverlay = ({ isOpen, onClose }: SearchOverlayProps) => {
             className="fixed top-0 left-0 right-0 z-[90] bg-background shadow-2xl max-h-[85vh] overflow-hidden flex flex-col"
           >
             {/* Search Input */}
-            <div className="flex items-center gap-4 px-6 md:px-16 py-5 border-b border-border">
+            <div className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 md:px-16 py-4 sm:py-5 border-b border-border">
               <Search size={20} className="text-muted-foreground flex-shrink-0" />
               <input
                 ref={inputRef}
@@ -95,7 +95,7 @@ const SearchOverlay = ({ isOpen, onClose }: SearchOverlayProps) => {
             </div>
 
             {/* Results */}
-            <div className="flex-1 overflow-y-auto px-6 md:px-16 py-6">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-16 py-6">
               {query.trim().length < 2 ? (
                 <div className="text-center py-12">
                   <p className="font-body text-xs text-muted-foreground tracking-wider">
