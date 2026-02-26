@@ -36,10 +36,10 @@ const Navbar = () => {
                 key={link.label}
                 to={link.to}
                 className={`font-body text-sm tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary ${
-                  link.label === "Sale"
-                    ? "text-sale font-medium"
-                    : location.pathname === link.to
+                  location.pathname === link.to
                     ? "text-primary font-medium"
+                    : link.label === "Sale"
+                    ? "text-sale font-medium"
                     : "text-foreground"
                 }`}
               >
