@@ -1,4 +1,60 @@
-import { Instagram, Facebook, Twitter } from "lucide-react";
+import { useState } from "react";
+import { Instagram, Facebook, Twitter, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const footerSections = [
+  {
+    title: "Shop",
+    items: ["Kaftans", "Dresses", "Co-Ord Sets", "Tops & Tunics", "Accessories"],
+  },
+  {
+    title: "Know Us",
+    items: ["About Us", "Contact", "Sizing Guide", "Boutique Locations"],
+  },
+  {
+    title: "Policies",
+    items: ["Privacy Policy", "Shipping", "Returns", "Terms & Conditions"],
+  },
+];
+
+const CollapsibleSection = ({ title, children }: { title: string; children: React.ReactNode }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="border-b border-primary-foreground/10 md:border-0">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full py-4 md:hidden"
+      >
+        <h4 className="font-body text-xs tracking-[0.2em] uppercase text-primary-foreground/80">
+          {title}
+        </h4>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown size={16} className="text-primary-foreground/50" />
+        </motion.span>
+      </button>
+      <h4 className="hidden md:block font-body text-xs tracking-[0.2em] uppercase mb-4 text-primary-foreground/80">
+        {title}
+      </h4>
+      {/* Desktop: always visible */}
+      <div className="hidden md:block">{children}</div>
+      {/* Mobile: collapsible */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden md:hidden pb-4"
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const Footer = () => {
   return (
@@ -24,45 +80,21 @@ const Footer = () => {
       </div>
 
       {/* Links */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-12 px-6 md:px-16 max-w-6xl mx-auto">
-        <div>
-          <h4 className="font-body text-xs tracking-[0.2em] uppercase mb-4 text-primary-foreground/80">Shop</h4>
-          <ul className="space-y-2">
-            {["Kaftans", "Dresses", "Co-Ord Sets", "Tops & Tunics", "Accessories"].map((item) => (
-              <li key={item}>
-                <a href="#" className="font-body text-xs text-primary-foreground/50 hover:text-gold transition-colors duration-300">
-                  {item}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h4 className="font-body text-xs tracking-[0.2em] uppercase mb-4 text-primary-foreground/80">Know Us</h4>
-          <ul className="space-y-2">
-            {["About Us", "Contact", "Sizing Guide", "Boutique Locations"].map((item) => (
-              <li key={item}>
-                <a href="#" className="font-body text-xs text-primary-foreground/50 hover:text-gold transition-colors duration-300">
-                  {item}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h4 className="font-body text-xs tracking-[0.2em] uppercase mb-4 text-primary-foreground/80">Policies</h4>
-          <ul className="space-y-2">
-            {["Privacy Policy", "Shipping", "Returns", "Terms & Conditions"].map((item) => (
-              <li key={item}>
-                <a href="#" className="font-body text-xs text-primary-foreground/50 hover:text-gold transition-colors duration-300">
-                  {item}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h4 className="font-body text-xs tracking-[0.2em] uppercase mb-4 text-primary-foreground/80">Follow Us</h4>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-0 md:gap-8 py-4 md:py-12 px-6 md:px-16 max-w-6xl mx-auto">
+        {footerSections.map((section) => (
+          <CollapsibleSection key={section.title} title={section.title}>
+            <ul className="space-y-2">
+              {section.items.map((item) => (
+                <li key={item}>
+                  <a href="#" className="font-body text-xs text-primary-foreground/50 hover:text-gold transition-colors duration-300">
+                    {item}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </CollapsibleSection>
+        ))}
+        <CollapsibleSection title="Follow Us">
           <div className="flex gap-4">
             <a href="#" className="text-primary-foreground/50 hover:text-gold transition-colors" aria-label="Instagram">
               <Instagram size={20} />
@@ -74,7 +106,7 @@ const Footer = () => {
               <Twitter size={20} />
             </a>
           </div>
-        </div>
+        </CollapsibleSection>
       </div>
 
       {/* Bottom */}
