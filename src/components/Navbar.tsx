@@ -47,7 +47,7 @@ const Navbar = () => {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="hidden lg:flex items-center gap-4">
             <button
               onClick={() => setSearchOpen(true)}
               className="text-foreground hover:text-primary transition-colors"
