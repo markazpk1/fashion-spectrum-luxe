@@ -36,16 +36,16 @@ const HeroSection = () => {
 
   return (
     <section ref={sectionRef} className="relative h-[60vh] md:h-[75vh] overflow-hidden">
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false}>
         <motion.img
           key={current}
           src={slides[current].src}
           alt={slides[current].alt}
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          transition={{ duration: 1, ease: "easeInOut" }}
+          className="absolute inset-0 w-full h-full object-cover object-top"
           style={{ y }}
         />
       </AnimatePresence>
