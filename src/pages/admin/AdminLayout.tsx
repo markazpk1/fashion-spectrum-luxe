@@ -3,7 +3,8 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Tag, Star,
   Settings, BarChart3, ChevronLeft, ChevronRight, LogOut, Bell,
-  Search, Menu, X, FileText, Truck, MessageSquare, Image, Percent
+  Search, Menu, X, FileText, Truck, MessageSquare, Image, Percent,
+  Server, Mail, Megaphone
 } from "lucide-react";
 import NotificationDropdown from "@/components/admin/NotificationDropdown";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,9 @@ const navItems = [
   { label: "Media", icon: Image, path: "/admin/media" },
   { label: "Messages", icon: MessageSquare, path: "/admin/messages" },
   { label: "Notifications", icon: Bell, path: "/admin/notifications" },
+  { label: "SMTP Settings", icon: Server, path: "/admin/smtp-settings" },
+  { label: "Email Templates", icon: Mail, path: "/admin/email-templates" },
+  { label: "Email Marketing", icon: Megaphone, path: "/admin/email-marketing" },
   { label: "Settings", icon: Settings, path: "/admin/settings" },
 ];
 
