@@ -115,21 +115,112 @@ const defaultSections: SectionMeta[] = [
   { id: "footer", label: "Footer", icon: <Mail size={16} />, enabled: true },
 ];
 
-interface SimplePageContent {
+export interface CatalogPageContent {
   title: string;
+  subtitle: string;
+  bannerImage: string;
   metaDescription: string;
-  heading: string;
-  bodyText: string;
+  ogImage: string;
+  announcementText: string;
+  announcementEnabled: boolean;
+  footerNewsletterTitle: string;
+  footerNewsletterSubtitle: string;
+  footerCtaText: string;
+  footerCopyright: string;
 }
 
-const simplePageDefaults: Record<string, SimplePageContent> = {
-  shop: { title: "Shop", metaDescription: "Browse our full collection", heading: "Shop All", bodyText: "Explore our complete range of luxury kaftans and resort wear." },
-  collections: { title: "Collections", metaDescription: "Browse curated collections", heading: "Collections", bodyText: "Explore our curated collections." },
-  "new-arrivals": { title: "New Arrivals", metaDescription: "See our latest pieces", heading: "New Arrivals", bodyText: "Fresh styles just landed." },
-  sale: { title: "Sale", metaDescription: "Shop sale items", heading: "Sale", bodyText: "Limited-time offers on selected pieces." },
-  "best-sellers": { title: "Best Sellers", metaDescription: "Shop our most popular", heading: "Best Sellers", bodyText: "Our most loved pieces." },
-  about: { title: "About", metaDescription: "Learn about FashionSpectrum", heading: "About Us", bodyText: "FashionSpectrum is the zenith of luxury resort wear." },
-  contact: { title: "Contact", metaDescription: "Get in touch", heading: "Contact Us", bodyText: "We'd love to hear from you." },
+const catalogPageDefaults: Record<string, CatalogPageContent> = {
+  shop: {
+    title: "Shop All",
+    subtitle: "Explore our complete collection of luxury resort wear",
+    bannerImage: "",
+    metaDescription: "Browse our full collection",
+    ogImage: "",
+    announcementText: "Free Shipping Over $300",
+    announcementEnabled: true,
+    footerNewsletterTitle: "Join the FashionSpectrum World",
+    footerNewsletterSubtitle: "Subscribe for exclusive access to new collections, special offers & more.",
+    footerCtaText: "Subscribe",
+    footerCopyright: "© 2026 FashionSpectrum. All Rights Reserved.",
+  },
+  collections: {
+    title: "Collections",
+    subtitle: "Curated collections for every occasion",
+    bannerImage: "",
+    metaDescription: "Browse curated collections",
+    ogImage: "",
+    announcementText: "Free Shipping Over $300",
+    announcementEnabled: true,
+    footerNewsletterTitle: "Join the FashionSpectrum World",
+    footerNewsletterSubtitle: "Subscribe for exclusive access to new collections, special offers & more.",
+    footerCtaText: "Subscribe",
+    footerCopyright: "© 2026 FashionSpectrum. All Rights Reserved.",
+  },
+  "new-arrivals": {
+    title: "New Arrivals",
+    subtitle: "The latest additions to our collection",
+    bannerImage: "",
+    metaDescription: "See our latest pieces",
+    ogImage: "",
+    announcementText: "Free Shipping Over $300",
+    announcementEnabled: true,
+    footerNewsletterTitle: "Join the FashionSpectrum World",
+    footerNewsletterSubtitle: "Subscribe for exclusive access to new collections, special offers & more.",
+    footerCtaText: "Subscribe",
+    footerCopyright: "© 2026 FashionSpectrum. All Rights Reserved.",
+  },
+  sale: {
+    title: "Summer Sale",
+    subtitle: "Limited time offers on select styles",
+    bannerImage: "",
+    metaDescription: "Shop sale items",
+    ogImage: "",
+    announcementText: "Free Shipping Over $300",
+    announcementEnabled: true,
+    footerNewsletterTitle: "Join the FashionSpectrum World",
+    footerNewsletterSubtitle: "Subscribe for exclusive access to new collections, special offers & more.",
+    footerCtaText: "Subscribe",
+    footerCopyright: "© 2026 FashionSpectrum. All Rights Reserved.",
+  },
+  "best-sellers": {
+    title: "Best Sellers",
+    subtitle: "Our most loved pieces",
+    bannerImage: "",
+    metaDescription: "Shop our most popular",
+    ogImage: "",
+    announcementText: "Free Shipping Over $300",
+    announcementEnabled: true,
+    footerNewsletterTitle: "Join the FashionSpectrum World",
+    footerNewsletterSubtitle: "Subscribe for exclusive access to new collections, special offers & more.",
+    footerCtaText: "Subscribe",
+    footerCopyright: "© 2026 FashionSpectrum. All Rights Reserved.",
+  },
+  about: {
+    title: "About Us",
+    subtitle: "",
+    bannerImage: "",
+    metaDescription: "Learn about FashionSpectrum",
+    ogImage: "",
+    announcementText: "Free Shipping Over $300",
+    announcementEnabled: true,
+    footerNewsletterTitle: "Join the FashionSpectrum World",
+    footerNewsletterSubtitle: "Subscribe for exclusive access to new collections, special offers & more.",
+    footerCtaText: "Subscribe",
+    footerCopyright: "© 2026 FashionSpectrum. All Rights Reserved.",
+  },
+  contact: {
+    title: "Contact Us",
+    subtitle: "",
+    bannerImage: "",
+    metaDescription: "Get in touch",
+    ogImage: "",
+    announcementText: "Free Shipping Over $300",
+    announcementEnabled: true,
+    footerNewsletterTitle: "Join the FashionSpectrum World",
+    footerNewsletterSubtitle: "Subscribe for exclusive access to new collections, special offers & more.",
+    footerCtaText: "Subscribe",
+    footerCopyright: "© 2026 FashionSpectrum. All Rights Reserved.",
+  },
 };
 
 // ---- Image Uploader Component ----
@@ -308,8 +399,8 @@ const AdminPageEditor = () => {
   const [sections, setSections] = useState<SectionMeta[]>(defaultSections);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const [simplePage, setSimplePage] = useState<SimplePageContent>(
-    simplePageDefaults[pageKey] || { title: "", metaDescription: "", heading: "", bodyText: "" }
+  const [catalogPage, setCatalogPage] = useState<CatalogPageContent>(
+    catalogPageDefaults[pageKey] || { title: "", subtitle: "", bannerImage: "", metaDescription: "", ogImage: "", announcementText: "Free Shipping Over $300", announcementEnabled: true, footerNewsletterTitle: "Join the FashionSpectrum World", footerNewsletterSubtitle: "Subscribe for exclusive access to new collections, special offers & more.", footerCtaText: "Subscribe", footerCopyright: "© 2026 FashionSpectrum. All Rights Reserved." }
   );
 
   useEffect(() => {
@@ -327,7 +418,7 @@ const AdminPageEditor = () => {
         if (data.footer) setFooter(data.footer);
         if (data.sections) setSections(data.sections);
       } else {
-        setSimplePage(data);
+        setCatalogPage(prev => ({ ...prev, ...data }));
       }
     }
   }, [pageKey, isHome]);
@@ -340,7 +431,7 @@ const AdminPageEditor = () => {
         hero, heroSlides, announcement, collectionBanner, collectionImage, aboutImage, about, footer, sections,
       }));
     } else {
-      localStorage.setItem(`page_content_${pageKey}`, JSON.stringify(simplePage));
+      localStorage.setItem(`page_content_${pageKey}`, JSON.stringify(catalogPage));
     }
     setHasChanges(false);
     toast({ title: "Page saved successfully" });
@@ -363,14 +454,14 @@ const AdminPageEditor = () => {
       setFooter(defaultHomeContent.footer);
       setSections(defaultSections);
     } else {
-      setSimplePage(simplePageDefaults[pageKey] || { title: "", metaDescription: "", heading: "", bodyText: "" });
+      setCatalogPage(catalogPageDefaults[pageKey] || { title: "", subtitle: "", bannerImage: "", metaDescription: "", ogImage: "", announcementText: "Free Shipping Over $300", announcementEnabled: true, footerNewsletterTitle: "Join the FashionSpectrum World", footerNewsletterSubtitle: "Subscribe for exclusive access to new collections, special offers & more.", footerCtaText: "Subscribe", footerCopyright: "© 2026 FashionSpectrum. All Rights Reserved." });
     }
     localStorage.removeItem(`page_content_${pageKey}`);
     setHasChanges(false);
     toast({ title: "Page reset to defaults" });
   };
 
-  const pageName = isHome ? "Home" : (simplePageDefaults[pageKey]?.title || pageKey);
+  const pageName = isHome ? "Home" : (catalogPageDefaults[pageKey]?.title || pageKey);
 
   return (
     <div className="space-y-6">
@@ -434,7 +525,7 @@ const AdminPageEditor = () => {
           sections={sections} toggleSection={toggleSection}
         />
       ) : (
-        <SimplePageEditor page={simplePage} setPage={(v) => { setSimplePage(v); markChanged(); }} />
+        <CatalogPageEditor page={catalogPage} setPage={(v) => { setCatalogPage(v); markChanged(); }} pageKey={pageKey} />
       )}
     </div>
   );
@@ -703,28 +794,115 @@ const HomePageEditor = ({
   </div>
 );
 
-// ---- Simple Page Editor ----
-const SimplePageEditor = ({ page, setPage }: { page: SimplePageContent; setPage: (v: SimplePageContent) => void }) => (
-  <div className="max-w-2xl space-y-6">
-    <EditorCard title="Page Content" description="Edit the content for this page">
-      <div className="space-y-2">
-        <Label className="font-body text-sm">Page Title (Browser Tab)</Label>
-        <Input value={page.title} onChange={e => setPage({ ...page, title: e.target.value })} />
-      </div>
-      <div className="space-y-2">
-        <Label className="font-body text-sm">Meta Description</Label>
-        <Textarea value={page.metaDescription} onChange={e => setPage({ ...page, metaDescription: e.target.value })} rows={2} />
-      </div>
-      <Separator />
-      <div className="space-y-2">
-        <Label className="font-body text-sm">Heading</Label>
-        <Input value={page.heading} onChange={e => setPage({ ...page, heading: e.target.value })} />
-      </div>
-      <div className="space-y-2">
-        <Label className="font-body text-sm">Body Text</Label>
-        <Textarea value={page.bodyText} onChange={e => setPage({ ...page, bodyText: e.target.value })} rows={6} />
-      </div>
-    </EditorCard>
+// ---- Catalog Page Editor ----
+const CatalogPageEditor = ({ page, setPage, pageKey }: { page: CatalogPageContent; setPage: (v: CatalogPageContent) => void; pageKey: string }) => (
+  <div className="space-y-6">
+    <Tabs defaultValue="banner" className="w-full">
+      <TabsList className="w-full justify-start bg-card border border-border h-auto p-1 flex-wrap">
+        <TabsTrigger value="banner" className="font-body text-xs">Banner & Content</TabsTrigger>
+        <TabsTrigger value="announcement" className="font-body text-xs">Announcement</TabsTrigger>
+        <TabsTrigger value="footer" className="font-body text-xs">Footer</TabsTrigger>
+        <TabsTrigger value="seo" className="font-body text-xs">SEO</TabsTrigger>
+      </TabsList>
+
+      {/* Banner & Content */}
+      <TabsContent value="banner">
+        <EditorCard title="Page Banner & Content" description="Customize the banner image, title and subtitle">
+          <SingleImageUploader
+            src={page.bannerImage || "/placeholder.svg"}
+            label="Banner Image"
+            onUpload={(src) => setPage({ ...page, bannerImage: src })}
+          />
+          <Separator />
+          <div className="space-y-2">
+            <Label className="font-body text-sm">Page Title</Label>
+            <Input value={page.title} onChange={e => setPage({ ...page, title: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label className="font-body text-sm">Subtitle</Label>
+            <Input value={page.subtitle} onChange={e => setPage({ ...page, subtitle: e.target.value })} placeholder="Short description shown below the title" />
+          </div>
+          <PreviewBox>
+            <div className="relative rounded-lg overflow-hidden">
+              {page.bannerImage ? (
+                <>
+                  <img src={page.bannerImage} alt="" className="w-full h-40 object-cover" />
+                  <div className="absolute inset-0 bg-charcoal/40 flex items-center justify-center text-center">
+                    <div>
+                      <p className="font-heading text-2xl font-light text-primary-foreground">{page.title}</p>
+                      {page.subtitle && <p className="font-body text-xs text-primary-foreground/70 mt-1">{page.subtitle}</p>}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="py-10 text-center border border-dashed border-border bg-secondary/20">
+                  <p className="font-heading text-2xl text-foreground font-light">{page.title}</p>
+                  {page.subtitle && <p className="font-body text-xs text-muted-foreground mt-1">{page.subtitle}</p>}
+                </div>
+              )}
+            </div>
+          </PreviewBox>
+        </EditorCard>
+      </TabsContent>
+
+      {/* Announcement */}
+      <TabsContent value="announcement">
+        <EditorCard title="Announcement Bar" description="The scrolling bar at the top of this page">
+          <div className="flex items-center justify-between">
+            <Label className="font-body text-sm">Enabled</Label>
+            <Switch checked={page.announcementEnabled} onCheckedChange={v => setPage({ ...page, announcementEnabled: v })} />
+          </div>
+          <div className="space-y-2">
+            <Label className="font-body text-sm">Announcement Text</Label>
+            <Input value={page.announcementText} onChange={e => setPage({ ...page, announcementText: e.target.value })} placeholder="e.g. Free Shipping Over $300" />
+          </div>
+          <PreviewBox>
+            <div className="bg-primary py-2 px-4 text-center">
+              <span className="text-xs font-body tracking-[0.2em] uppercase text-primary-foreground">{page.announcementText}</span>
+            </div>
+          </PreviewBox>
+        </EditorCard>
+      </TabsContent>
+
+      {/* Footer */}
+      <TabsContent value="footer">
+        <EditorCard title="Footer" description="Newsletter and footer content for this page">
+          <div className="space-y-2">
+            <Label className="font-body text-sm">Newsletter Title</Label>
+            <Input value={page.footerNewsletterTitle} onChange={e => setPage({ ...page, footerNewsletterTitle: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label className="font-body text-sm">Newsletter Subtitle</Label>
+            <Textarea value={page.footerNewsletterSubtitle} onChange={e => setPage({ ...page, footerNewsletterSubtitle: e.target.value })} rows={2} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="font-body text-sm">Button Text</Label>
+              <Input value={page.footerCtaText} onChange={e => setPage({ ...page, footerCtaText: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label className="font-body text-sm">Copyright</Label>
+              <Input value={page.footerCopyright} onChange={e => setPage({ ...page, footerCopyright: e.target.value })} />
+            </div>
+          </div>
+        </EditorCard>
+      </TabsContent>
+
+      {/* SEO */}
+      <TabsContent value="seo">
+        <EditorCard title="SEO Settings" description="Search engine optimization for this page">
+          <div className="space-y-2">
+            <Label className="font-body text-sm">Meta Description</Label>
+            <Textarea value={page.metaDescription} onChange={e => setPage({ ...page, metaDescription: e.target.value })} rows={3} placeholder="Brief description for search results" />
+            <p className="font-body text-xs text-muted-foreground">Recommended: 150-160 characters</p>
+          </div>
+          <div className="space-y-2">
+            <Label className="font-body text-sm">OG Image URL</Label>
+            <Input value={page.ogImage} onChange={e => setPage({ ...page, ogImage: e.target.value })} placeholder="https://example.com/og-image.jpg" />
+          </div>
+        </EditorCard>
+      </TabsContent>
+    </Tabs>
   </div>
 );
 
