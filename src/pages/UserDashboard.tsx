@@ -272,6 +272,7 @@ const WishlistTab = () => {
 
 const PaymentsTab = () => {
   const [showAddCard, setShowAddCard] = useState(false);
+  const [editingCard, setEditingCard] = useState<null | { id: number; name: string; number: string; expiry: string; cvv: string; type: string }>(null);
   const [cards, setCards] = useState(mockPayments);
   const [newCard, setNewCard] = useState({ name: "", number: "", expiry: "", cvv: "", type: "Visa" });
 
@@ -307,6 +308,119 @@ const PaymentsTab = () => {
     toast({ title: "Card added successfully!" });
   };
 
+  const handleEditCard = (card: typeof cards[0]) => {
+    setEditingCard({
+      id: card.id,
+      name: "",
+      number: `•••• •••• •••• ${card.last4}`,
+      expiry: card.expiry,
+      cvv: "",
+      type: card.type,
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingCard) return;
+    const expiry = editingCard.expiry;
+    if (expiry.length < 5) {
+      toast({ title: "Please enter a valid expiry date", variant: "destructive" });
+      return;
+    }
+    setCards(cards.map(c => c.id === editingCard.id ? {
+      ...c,
+      expiry: editingCard.expiry,
+      type: editingCard.number.includes("••••") ? c.type : detectCardType(editingCard.number),
+      last4: editingCard.number.includes("••••") ? c.last4 : editingCard.number.replace(/\s/g, "").slice(-4),
+    } : c));
+    setEditingCard(null);
+    toast({ title: "Card updated successfully!" });
+  };
+
+  const CardFormDialog = ({ title, cardState, setCardState, onSave, onClose, saveLabel }: {
+    title: string;
+    cardState: { name: string; number: string; expiry: string; cvv: string; type: string };
+    setCardState: (updater: (prev: typeof cardState) => typeof cardState) => void;
+    onSave: () => void;
+    onClose: () => void;
+    saveLabel: string;
+  }) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black/60" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative z-50 bg-background border border-border rounded-lg shadow-xl w-full max-w-md mx-4 p-6"
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-heading text-lg font-semibold text-foreground">{title}</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="font-body text-xs uppercase text-muted-foreground">Cardholder Name</Label>
+            <Input
+              placeholder="Name on card"
+              value={cardState.name}
+              onChange={e => setCardState(c => ({ ...c, name: e.target.value }))}
+              className="h-10 bg-card border-border font-body"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="font-body text-xs uppercase text-muted-foreground">Card Number</Label>
+            <div className="relative">
+              <Input
+                placeholder="0000 0000 0000 0000"
+                value={cardState.number}
+                onChange={e => {
+                  const formatted = formatCardNumber(e.target.value);
+                  setCardState(c => ({ ...c, number: formatted, type: detectCardType(formatted) }));
+                }}
+                className="h-10 bg-card border-border font-body pr-16"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-body text-muted-foreground">
+                {detectCardType(cardState.number)}
+              </span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="font-body text-xs uppercase text-muted-foreground">Expiry Date</Label>
+              <Input
+                placeholder="MM/YY"
+                value={cardState.expiry}
+                onChange={e => setCardState(c => ({ ...c, expiry: formatExpiry(e.target.value) }))}
+                className="h-10 bg-card border-border font-body"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="font-body text-xs uppercase text-muted-foreground">CVV</Label>
+              <Input
+                placeholder="•••"
+                value={cardState.cvv}
+                onChange={e => setCardState(c => ({ ...c, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
+                className="h-10 bg-card border-border font-body"
+                type="password"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <Button variant="outline" className="flex-1 font-body text-xs tracking-wider uppercase" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button className="flex-1 font-body text-xs tracking-wider uppercase" onClick={onSave}>
+            {saveLabel}
+          </Button>
+        </div>
+      </motion.div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -318,81 +432,26 @@ const PaymentsTab = () => {
 
       {/* Add Card Dialog */}
       {showAddCard && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/60" onClick={() => setShowAddCard(false)} />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="relative z-50 bg-background border border-border rounded-lg shadow-xl w-full max-w-md mx-4 p-6"
-          >
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-heading text-lg font-semibold text-foreground">Add New Card</h3>
-              <button onClick={() => setShowAddCard(false)} className="text-muted-foreground hover:text-foreground">
-                <X size={18} />
-              </button>
-            </div>
+        <CardFormDialog
+          title="Add New Card"
+          cardState={newCard}
+          setCardState={(updater) => setNewCard(updater)}
+          onSave={handleAddCard}
+          onClose={() => setShowAddCard(false)}
+          saveLabel="Add Card"
+        />
+      )}
 
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="font-body text-xs uppercase text-muted-foreground">Cardholder Name</Label>
-                <Input
-                  placeholder="Name on card"
-                  value={newCard.name}
-                  onChange={e => setNewCard(c => ({ ...c, name: e.target.value }))}
-                  className="h-10 bg-card border-border font-body"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="font-body text-xs uppercase text-muted-foreground">Card Number</Label>
-                <div className="relative">
-                  <Input
-                    placeholder="0000 0000 0000 0000"
-                    value={newCard.number}
-                    onChange={e => {
-                      const formatted = formatCardNumber(e.target.value);
-                      setNewCard(c => ({ ...c, number: formatted, type: detectCardType(formatted) }));
-                    }}
-                    className="h-10 bg-card border-border font-body pr-16"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-body text-muted-foreground">
-                    {detectCardType(newCard.number)}
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="font-body text-xs uppercase text-muted-foreground">Expiry Date</Label>
-                  <Input
-                    placeholder="MM/YY"
-                    value={newCard.expiry}
-                    onChange={e => setNewCard(c => ({ ...c, expiry: formatExpiry(e.target.value) }))}
-                    className="h-10 bg-card border-border font-body"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="font-body text-xs uppercase text-muted-foreground">CVV</Label>
-                  <Input
-                    placeholder="•••"
-                    value={newCard.cvv}
-                    onChange={e => setNewCard(c => ({ ...c, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
-                    className="h-10 bg-card border-border font-body"
-                    type="password"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <Button variant="outline" className="flex-1 font-body text-xs tracking-wider uppercase" onClick={() => setShowAddCard(false)}>
-                Cancel
-              </Button>
-              <Button className="flex-1 font-body text-xs tracking-wider uppercase" onClick={handleAddCard}>
-                Add Card
-              </Button>
-            </div>
-          </motion.div>
-        </div>
+      {/* Edit Card Dialog */}
+      {editingCard && (
+        <CardFormDialog
+          title="Edit Card"
+          cardState={editingCard}
+          setCardState={(updater) => setEditingCard(prev => prev ? { ...prev, ...updater(prev) } : prev)}
+          onSave={handleSaveEdit}
+          onClose={() => setEditingCard(null)}
+          saveLabel="Save Changes"
+        />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -409,7 +468,7 @@ const PaymentsTab = () => {
               </div>
             </div>
             <div className="flex gap-2 mt-3 flex-wrap">
-              <Button variant="outline" size="sm" className="font-body text-xs"><Edit2 size={12} className="mr-1" /> Edit</Button>
+              <Button variant="outline" size="sm" className="font-body text-xs" onClick={() => handleEditCard(card)}><Edit2 size={12} className="mr-1" /> Edit</Button>
               {!card.isDefault && (
                 <>
                   <Button variant="outline" size="sm" className="font-body text-xs text-primary" onClick={() => {
