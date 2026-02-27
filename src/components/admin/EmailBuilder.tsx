@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   Type, Image, MousePointer2, Minus, Square, Columns2, List,
   GripVertical, Trash2, ChevronUp, ChevronDown, Copy, ArrowLeft,
@@ -235,7 +235,9 @@ interface EmailBuilderProps {
 }
 
 const EmailBuilder = ({ onBack, campaignName = "Campaign", initialBlocks, onSave }: EmailBuilderProps) => {
-  const [blocks, setBlocks] = useState<EmailBlock[]>(initialBlocks || starterBlocks);
+  const [blocks, setBlocksRaw] = useState<EmailBlock[]>(initialBlocks || starterBlocks);
+  const [history, setHistory] = useState<EmailBlock[][]>([initialBlocks || starterBlocks]);
+  const [historyIndex, setHistoryIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -244,13 +246,59 @@ const EmailBuilder = ({ onBack, campaignName = "Campaign", initialBlocks, onSave
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // ─── History-aware setBlocks ───────────────────────────────
+  const setBlocks = useCallback((updater: EmailBlock[] | ((prev: EmailBlock[]) => EmailBlock[])) => {
+    setBlocksRaw((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      setHistory((h) => [...h.slice(0, historyIndex + 1), next]);
+      setHistoryIndex((i) => i + 1);
+      return next;
+    });
+  }, [historyIndex]);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const undo = useCallback(() => {
+    if (!canUndo) return;
+    const newIndex = historyIndex - 1;
+    setHistoryIndex(newIndex);
+    setBlocksRaw(history[newIndex]);
+    setSelectedId(null);
+  }, [canUndo, historyIndex, history]);
+
+  const redo = useCallback(() => {
+    if (!canRedo) return;
+    const newIndex = historyIndex + 1;
+    setHistoryIndex(newIndex);
+    setBlocksRaw(history[newIndex]);
+    setSelectedId(null);
+  }, [canRedo, historyIndex, history]);
+
+  // Keyboard shortcuts
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
+      e.preventDefault();
+      undo();
+    }
+    if ((e.metaKey || e.ctrlKey) && (e.key === "y" || (e.key === "z" && e.shiftKey))) {
+      e.preventDefault();
+      redo();
+    }
+  }, [undo, redo]);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
   const selectedBlock = blocks.find((b) => b.id === selectedId) || null;
 
   // ─── Load template preset ──────────────────────────────────
   const loadTemplate = useCallback((preset: TemplatePreset) => {
     setBlocks(preset.blocks());
     setSelectedId(null);
-  }, []);
+  }, [setBlocks]);
 
   // ─── Block operations ──────────────────────────────────────
 
@@ -728,6 +776,29 @@ ${blocks.map(renderBlock).join("\n")}
           </Button>
           <Separator orientation="vertical" className="h-6" />
           <h2 className="font-heading text-lg font-semibold text-foreground">{campaignName}</h2>
+          <Separator orientation="vertical" className="h-6" />
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="font-body text-xs h-8 w-8 p-0"
+              disabled={!canUndo}
+              onClick={undo}
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 size={14} />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="font-body text-xs h-8 w-8 p-0"
+              disabled={!canRedo}
+              onClick={redo}
+              title="Redo (Ctrl+Shift+Z)"
+            >
+              <Undo2 size={14} className="scale-x-[-1]" />
+            </Button>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="font-body text-xs" onClick={() => setViewMode("preview")}>
