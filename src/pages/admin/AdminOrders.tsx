@@ -52,6 +52,7 @@ const statusIcon: Record<string, React.ElementType> = {
 };
 
 const AdminOrders = () => {
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [orders, setOrders] = useState(mockOrders);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -62,6 +63,38 @@ const AdminOrders = () => {
     const matchStatus = statusFilter === "All" || o.status === statusFilter;
     return matchSearch && matchStatus;
   });
+
+  const toggleRow = (id: string) => {
+    setSelectedRows(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedRows.size === filtered.length) {
+      setSelectedRows(new Set());
+    } else {
+      setSelectedRows(new Set(filtered.map(o => o.id)));
+    }
+  };
+
+  const exportCSV = (rows: Order[]) => {
+    const headers = ["Order ID", "Customer", "Email", "Items", "Total", "Status", "Payment", "Date", "Address"];
+    const csv = [
+      headers.join(","),
+      ...rows.map(o => [o.id, o.customer, o.email, o.items, o.total, o.status, o.payment, o.date, `"${o.address}"`].join(","))
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `orders-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: `${rows.length} orders exported to CSV` });
+  };
 
   const updateStatus = (id: string, newStatus: string) => {
     setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
@@ -75,9 +108,16 @@ const AdminOrders = () => {
           <h1 className="font-heading text-3xl font-semibold text-foreground">Orders</h1>
           <p className="font-body text-sm text-muted-foreground">{orders.length} total orders</p>
         </div>
-        <Button variant="outline" className="font-body text-xs tracking-wider uppercase">
-          <Download size={14} className="mr-1" /> Export
-        </Button>
+        <div className="flex gap-2">
+          {selectedRows.size > 0 && (
+            <Button variant="outline" className="font-body text-xs tracking-wider uppercase" onClick={() => exportCSV(filtered.filter(o => selectedRows.has(o.id)))}>
+              <Download size={14} className="mr-1" /> Export Selected ({selectedRows.size})
+            </Button>
+          )}
+          <Button variant="outline" className="font-body text-xs tracking-wider uppercase" onClick={() => exportCSV(filtered)}>
+            <Download size={14} className="mr-1" /> Export All
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -122,6 +162,9 @@ const AdminOrders = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-secondary/30">
+                <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground w-10">
+                  <input type="checkbox" checked={selectedRows.size === filtered.length && filtered.length > 0} onChange={toggleAll} className="rounded border-border accent-primary" />
+                </th>
                 <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground">Order</th>
                 <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Customer</th>
                 <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Date</th>
@@ -134,6 +177,9 @@ const AdminOrders = () => {
             <tbody>
               {filtered.map(o => (
                 <tr key={o.id} className="border-b border-border hover:bg-secondary/20 transition-colors">
+                  <td className="px-4 py-3 w-10">
+                    <input type="checkbox" checked={selectedRows.has(o.id)} onChange={() => toggleRow(o.id)} className="rounded border-border accent-primary" />
+                  </td>
                   <td className="px-4 py-3">
                     <p className="font-body text-sm font-medium text-foreground">{o.id}</p>
                     <p className="font-body text-xs text-muted-foreground sm:hidden">{o.customer}</p>

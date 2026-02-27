@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Eye, X, Users, Mail, Phone, MapPin, ShoppingCart, Star } from "lucide-react";
+import { Search, Eye, X, Users, Mail, Phone, MapPin, ShoppingCart, Star, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
 
 interface Customer {
   id: number;
@@ -33,6 +34,39 @@ const AdminCustomers = () => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Customer | null>(null);
   const [filter, setFilter] = useState("All");
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+
+  const toggleRow = (id: number) => {
+    setSelectedRows(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedRows.size === filtered.length) {
+      setSelectedRows(new Set());
+    } else {
+      setSelectedRows(new Set(filtered.map(c => c.id)));
+    }
+  };
+
+  const exportCSV = (rows: Customer[]) => {
+    const headers = ["ID", "Name", "Email", "Phone", "City", "Orders", "Total Spent", "Joined", "Status"];
+    const csv = [
+      headers.join(","),
+      ...rows.map(c => [c.id, c.name, c.email, `"${c.phone}"`, c.city, c.orders, c.spent, c.joined, c.status].join(","))
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `customers-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: `${rows.length} customers exported to CSV` });
+  };
 
   const filtered = mockCustomers.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase());
@@ -42,9 +76,21 @@ const AdminCustomers = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-3xl font-semibold text-foreground">Customers</h1>
-        <p className="font-body text-sm text-muted-foreground">{mockCustomers.length} registered customers</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-3xl font-semibold text-foreground">Customers</h1>
+          <p className="font-body text-sm text-muted-foreground">{mockCustomers.length} registered customers</p>
+        </div>
+        <div className="flex gap-2">
+          {selectedRows.size > 0 && (
+            <Button variant="outline" className="font-body text-xs tracking-wider uppercase" onClick={() => exportCSV(filtered.filter(c => selectedRows.has(c.id)))}>
+              <Download size={14} className="mr-1" /> Export Selected ({selectedRows.size})
+            </Button>
+          )}
+          <Button variant="outline" className="font-body text-xs tracking-wider uppercase" onClick={() => exportCSV(filtered)}>
+            <Download size={14} className="mr-1" /> Export All
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -84,6 +130,9 @@ const AdminCustomers = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-secondary/30">
+                <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground w-10">
+                  <input type="checkbox" checked={selectedRows.size === filtered.length && filtered.length > 0} onChange={toggleAll} className="rounded border-border accent-primary" />
+                </th>
                 <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground">Customer</th>
                 <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">City</th>
                 <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground">Orders</th>
@@ -111,6 +160,9 @@ const AdminCustomers = () => {
                   <td className="px-4 py-3 font-body text-sm font-medium text-foreground hidden sm:table-cell">₨ {c.spent.toLocaleString()}</td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <span className={`text-xs px-2.5 py-1 rounded-full font-body font-medium ${c.status === "Active" ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>{c.status}</span>
+                  </td>
+                  <td className="px-4 py-3 w-10">
+                    <input type="checkbox" checked={selectedRows.has(c.id)} onChange={() => toggleRow(c.id)} className="rounded border-border accent-primary" />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end">
