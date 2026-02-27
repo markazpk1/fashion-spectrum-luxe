@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import {
   Mail, Eye, Copy, Edit3, Check, Undo2, Palette, Code2, Smartphone, Plus, Trash2,
   Type, AlignLeft, MousePointerClick, Image, Minus, GripVertical, ArrowUp, ArrowDown, ChevronDown,
-  Columns2, Crown, Share2, Instagram, Facebook, Twitter
+  Columns2, Crown, Share2, Instagram, Facebook, Twitter, FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ interface EmailTemplate {
   active: boolean;
 }
 
-type BlockType = "heading" | "text" | "button" | "image" | "divider" | "spacer" | "two-column" | "logo-header" | "social-links";
+type BlockType = "heading" | "text" | "button" | "image" | "divider" | "spacer" | "two-column" | "logo-header" | "social-links" | "footer";
 
 interface EmailBlock {
   id: string;
@@ -53,6 +53,8 @@ interface EmailBlock {
   socialLinks?: { platform: string; url: string }[];
   logoUrl?: string;
   brandName?: string;
+  companyAddress?: string;
+  unsubscribeUrl?: string;
 }
 
 const defaultTemplates: EmailTemplate[] = [
@@ -267,6 +269,12 @@ const blocksToHtml = (blocks: EmailBlock[]): string => {
     <div>${linksHtml}</div>
   </div>`;
       }
+      case "footer":
+        return `  <div style="border-top: 1px solid #eee; padding: 20px 0; margin-top: 24px; text-align: center;">
+    <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 0 0 8px;">${block.companyAddress || "123 Main Street, City, State 12345"}</p>
+    <p style="color: #999; font-size: 11px; margin: 0;">${block.content || "You're receiving this because you signed up for our emails."}</p>
+    <p style="margin: 8px 0 0;"><a href="${block.unsubscribeUrl || "{{unsubscribe_url}}"}" style="color: #999; font-size: 11px; text-decoration: underline;">Unsubscribe</a> · <a href="${block.url || "{{preferences_url}}"}" style="color: #999; font-size: 11px; text-decoration: underline;">Email Preferences</a></p>
+  </div>`;
       default:
         return "";
     }
@@ -284,6 +292,7 @@ const blockTypeConfig: { type: BlockType; icon: React.ReactNode; label: string }
   { type: "logo-header", icon: <Crown size={14} />, label: "Logo Header" },
   { type: "two-column", icon: <Columns2 size={14} />, label: "Two Column" },
   { type: "social-links", icon: <Share2 size={14} />, label: "Social Links" },
+  { type: "footer", icon: <FileText size={14} />, label: "Footer" },
 ];
 
 // --- Block Editor Component ---
@@ -294,11 +303,12 @@ const BlockEditor = ({ blocks, onChange }: { blocks: EmailBlock[]; onChange: (bl
     const newBlock: EmailBlock = {
       id: `b-${Date.now()}`,
       type,
-      content: type === "heading" ? "New Heading" : type === "text" ? "Your text here..." : type === "button" ? "Click Here" : type === "logo-header" ? "Your tagline here" : type === "divider" || type === "spacer" || type === "two-column" || type === "social-links" ? "" : "",
+      content: type === "heading" ? "New Heading" : type === "text" ? "Your text here..." : type === "button" ? "Click Here" : type === "logo-header" ? "Your tagline here" : type === "footer" ? "You're receiving this because you signed up for our emails." : type === "divider" || type === "spacer" || type === "two-column" || type === "social-links" ? "" : "",
       url: type === "button" ? "#" : type === "image" ? "https://via.placeholder.com/600x200" : undefined,
       ...(type === "logo-header" && { brandName: "Fashion Spectrum", logoUrl: "" }),
       ...(type === "two-column" && { leftContent: "Left column content goes here.", rightContent: "Right column content goes here." }),
       ...(type === "social-links" && { socialLinks: [{ platform: "instagram", url: "#" }, { platform: "facebook", url: "#" }, { platform: "twitter", url: "#" }] }),
+      ...(type === "footer" && { companyAddress: "Fashion Spectrum · 123 Main Street, City, State 12345", unsubscribeUrl: "{{unsubscribe_url}}", url: "{{preferences_url}}" }),
     };
     onChange([...blocks, newBlock]);
     setSelectedBlock(newBlock.id);
@@ -381,7 +391,7 @@ const BlockEditor = ({ blocks, onChange }: { blocks: EmailBlock[]; onChange: (bl
             {/* Block preview (collapsed) */}
             {selectedBlock !== block.id && block.type !== "divider" && block.type !== "spacer" && (
               <p className="text-xs text-foreground/70 truncate font-body">
-                {block.type === "logo-header" ? (block.brandName || "Logo Header") : block.type === "two-column" ? "Two Column Layout" : block.type === "social-links" ? `${(block.socialLinks || []).length} social links` : block.content}
+                {block.type === "logo-header" ? (block.brandName || "Logo Header") : block.type === "two-column" ? "Two Column Layout" : block.type === "social-links" ? `${(block.socialLinks || []).length} social links` : block.type === "footer" ? "Footer · Unsubscribe" : block.content}
               </p>
             )}
 
@@ -565,6 +575,46 @@ const BlockEditor = ({ blocks, onChange }: { blocks: EmailBlock[]; onChange: (bl
                       <Plus size={12} className="mr-1" /> Add Link
                     </Button>
                   </div>
+                )}
+                {block.type === "footer" && (
+                  <>
+                    <div>
+                      <Label className="text-[11px] font-body text-muted-foreground">Company Address</Label>
+                      <Input
+                        value={block.companyAddress || ""}
+                        onChange={(e) => updateBlock(block.id, { companyAddress: e.target.value })}
+                        className="mt-1 h-8 text-sm font-body"
+                        placeholder="123 Main Street, City, State 12345"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[11px] font-body text-muted-foreground">Disclaimer Text</Label>
+                      <Textarea
+                        value={block.content}
+                        onChange={(e) => updateBlock(block.id, { content: e.target.value })}
+                        className="mt-1 text-sm font-body min-h-[50px]"
+                        placeholder="You're receiving this because you signed up..."
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[11px] font-body text-muted-foreground">Unsubscribe URL</Label>
+                      <Input
+                        value={block.unsubscribeUrl || ""}
+                        onChange={(e) => updateBlock(block.id, { unsubscribeUrl: e.target.value })}
+                        className="mt-1 h-8 text-sm font-body"
+                        placeholder="{{unsubscribe_url}}"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[11px] font-body text-muted-foreground">Email Preferences URL</Label>
+                      <Input
+                        value={block.url || ""}
+                        onChange={(e) => updateBlock(block.id, { url: e.target.value })}
+                        className="mt-1 h-8 text-sm font-body"
+                        placeholder="{{preferences_url}}"
+                      />
+                    </div>
+                  </>
                 )}
               </div>
             )}
