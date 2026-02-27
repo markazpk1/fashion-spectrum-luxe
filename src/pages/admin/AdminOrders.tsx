@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 
 interface Order {
@@ -57,7 +58,7 @@ const AdminOrders = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-
+  const [bulkConfirm, setBulkConfirm] = useState<string | null>(null);
   const filtered = orders.filter(o => {
     const matchSearch = o.id.toLowerCase().includes(search.toLowerCase()) || o.customer.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "All" || o.status === statusFilter;
@@ -102,9 +103,15 @@ const AdminOrders = () => {
   };
 
   const bulkUpdateStatus = (newStatus: string) => {
-    setOrders(orders.map(o => selectedRows.has(o.id) ? { ...o, status: newStatus } : o));
-    toast({ title: `${selectedRows.size} orders marked as ${newStatus}` });
+    setBulkConfirm(newStatus);
+  };
+
+  const confirmBulkUpdate = () => {
+    if (!bulkConfirm) return;
+    setOrders(orders.map(o => selectedRows.has(o.id) ? { ...o, status: bulkConfirm } : o));
+    toast({ title: `${selectedRows.size} orders marked as ${bulkConfirm}` });
     setSelectedRows(new Set());
+    setBulkConfirm(null);
   };
 
   return (
@@ -273,6 +280,23 @@ const AdminOrders = () => {
           </motion.div>
         </div>
       )}
+
+      <AlertDialog open={!!bulkConfirm} onOpenChange={() => setBulkConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-heading">Confirm Bulk Status Update</AlertDialogTitle>
+            <AlertDialogDescription className="font-body">
+              Are you sure you want to mark <span className="font-semibold text-foreground">{selectedRows.size} orders</span> as <span className="font-semibold text-foreground">{bulkConfirm}</span>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="font-body text-xs tracking-wider uppercase">Cancel</AlertDialogCancel>
+            <AlertDialogAction className="font-body text-xs tracking-wider uppercase" onClick={confirmBulkUpdate}>
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
