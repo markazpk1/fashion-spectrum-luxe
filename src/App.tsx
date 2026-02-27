@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { AnimatePresence } from "framer-motion";
@@ -27,7 +27,29 @@ import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
 
+// Admin
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminReviews from "./pages/admin/AdminReviews";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminInventory from "./pages/admin/AdminInventory";
+import AdminPages from "./pages/admin/AdminPages";
+import AdminMedia from "./pages/admin/AdminMedia";
+import AdminMessages from "./pages/admin/AdminMessages";
+import AdminSettings from "./pages/admin/AdminSettings";
+
 const queryClient = new QueryClient();
+
+const AdminProtected = ({ children }: { children: React.ReactNode }) => {
+  const isAuth = sessionStorage.getItem("admin_auth") === "true";
+  return isAuth ? <>{children}</> : <Navigate to="/admin/login" replace />;
+};
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -48,13 +70,22 @@ const AnimatedRoutes = () => {
 
     return () => lenis.destroy();
   }, []);
+
+  // Don't show store chrome on admin routes
+  const isAdmin = location.pathname.startsWith("/admin");
+
   return (
     <>
-      <CartDrawer />
-      <MobileBottomNav onSearchOpen={() => setSearchOpen(true)} />
-      <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      {!isAdmin && (
+        <>
+          <CartDrawer />
+          <MobileBottomNav onSearchOpen={() => setSearchOpen(true)} />
+          <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+        </>
+      )}
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
+          {/* Store Routes */}
           <Route path="/" element={<PageTransition><Index /></PageTransition>} />
           <Route path="/shop" element={<PageTransition><Shop /></PageTransition>} />
           <Route path="/collections" element={<PageTransition><Collections /></PageTransition>} />
@@ -67,6 +98,25 @@ const AnimatedRoutes = () => {
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
           <Route path="/account" element={<PageTransition><UserDashboard /></PageTransition>} />
+
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminProtected><AdminLayout /></AdminProtected>}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="customers" element={<AdminCustomers />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+            <Route path="coupons" element={<AdminCoupons />} />
+            <Route path="reviews" element={<AdminReviews />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="inventory" element={<AdminInventory />} />
+            <Route path="pages" element={<AdminPages />} />
+            <Route path="media" element={<AdminMedia />} />
+            <Route path="messages" element={<AdminMessages />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
+
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </AnimatePresence>
