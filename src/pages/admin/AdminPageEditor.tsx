@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Eye, GripVertical, Image, Type, FileText, Layout, Mail, Globe } from "lucide-react";
+import { ArrowLeft, Save, Eye, GripVertical, Image as ImageIcon, Type, FileText, Layout, Mail, Globe, Upload, X, Plus, Replace } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,21 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 
-// Editable content model for the Home page
+// Import default hero images
+import heroKaftan1 from "@/assets/hero-kaftan-1.jpg";
+import heroKaftan2 from "@/assets/hero-kaftan-2.jpg";
+import heroKaftan3 from "@/assets/hero-kaftan-3.jpg";
+import heroKaftan4 from "@/assets/hero-kaftan-4.jpg";
+import heroKaftan5 from "@/assets/hero-kaftan-5.jpg";
+import collectionBannerImg from "@/assets/collection-banner.jpg";
+import aboutBrandImg from "@/assets/about-brand.jpg";
+
+// ---- Interfaces ----
+interface HeroSlide {
+  src: string;
+  alt: string;
+}
+
 interface HeroContent {
   titleLine1: string;
   titleLine2: string;
@@ -54,7 +68,15 @@ interface SectionMeta {
   enabled: boolean;
 }
 
-// Default content matching the current storefront
+// ---- Defaults ----
+const defaultHeroSlides: HeroSlide[] = [
+  { src: heroKaftan1, alt: "Luxurious jewel-toned kaftan collection" },
+  { src: heroKaftan2, alt: "Black and gold embroidered kaftan" },
+  { src: heroKaftan3, alt: "Turquoise and gold ornate kaftan" },
+  { src: heroKaftan4, alt: "White and gold bridal kaftan" },
+  { src: heroKaftan5, alt: "Crimson embroidered kaftan" },
+];
+
 const defaultHomeContent = {
   hero: {
     titleLine1: "Luxurious",
@@ -65,16 +87,8 @@ const defaultHomeContent = {
     autoSlide: true,
     slideInterval: 4500,
   } as HeroContent,
-  announcement: {
-    text: "Free Shipping Over $300",
-    enabled: true,
-  } as AnnouncementContent,
-  collectionBanner: {
-    subtitle: "Latest Collection",
-    title: "Golden Lady",
-    ctaText: "Explore Collection",
-    ctaLink: "#",
-  } as CollectionBannerContent,
+  announcement: { text: "Free Shipping Over $300", enabled: true } as AnnouncementContent,
+  collectionBanner: { subtitle: "Latest Collection", title: "Golden Lady", ctaText: "Explore Collection", ctaLink: "#" } as CollectionBannerContent,
   about: {
     title: "About The Brand",
     paragraph1: "FashionSpectrum is the zenith of luxury resort wear, crafted for the modern woman who embraces elegance in every moment. Our collections blend cultural artistry with contemporary design, creating pieces that transcend seasons and boundaries.",
@@ -91,16 +105,15 @@ const defaultHomeContent = {
 
 const defaultSections: SectionMeta[] = [
   { id: "announcement", label: "Announcement Bar", icon: <Globe size={16} />, enabled: true },
-  { id: "hero", label: "Hero Section", icon: <Image size={16} />, enabled: true },
+  { id: "hero", label: "Hero Section", icon: <ImageIcon size={16} />, enabled: true },
   { id: "newArrivals", label: "New Arrivals", icon: <Layout size={16} />, enabled: true },
-  { id: "collectionBanner", label: "Collection Banner", icon: <Image size={16} />, enabled: true },
+  { id: "collectionBanner", label: "Collection Banner", icon: <ImageIcon size={16} />, enabled: true },
   { id: "saleBanner", label: "Summer Sale", icon: <Layout size={16} />, enabled: true },
   { id: "bestSellers", label: "Best Sellers", icon: <Layout size={16} />, enabled: true },
   { id: "about", label: "About Brand", icon: <FileText size={16} />, enabled: true },
   { id: "footer", label: "Footer", icon: <Mail size={16} />, enabled: true },
 ];
 
-// Simple page content for non-home pages
 interface SimplePageContent {
   title: string;
   metaDescription: string;
@@ -118,11 +131,163 @@ const simplePageDefaults: Record<string, SimplePageContent> = {
   contact: { title: "Contact", metaDescription: "Get in touch", heading: "Contact Us", bodyText: "We'd love to hear from you." },
 };
 
-const pageNameFromPath = (path: string) => {
-  if (path === "/") return "home";
-  return path.replace(/^\//, "");
+// ---- Image Uploader Component ----
+const ImageUploader = ({ src, alt, onUpload, onRemove, onAltChange, className = "" }: {
+  src: string;
+  alt: string;
+  onUpload: (dataUrl: string) => void;
+  onRemove?: () => void;
+  onAltChange?: (alt: string) => void;
+  className?: string;
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be under 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) onUpload(e.target.result as string);
+    };
+    reader.readAsDataURL(file);
+  }, [onUpload]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
+
+  return (
+    <div className={`relative group ${className}`}>
+      <div
+        className="relative overflow-hidden rounded-lg border border-border bg-secondary/30 cursor-pointer"
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop}
+      >
+        <img src={src} alt={alt} className="w-full h-40 object-cover" />
+        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-all duration-200 flex items-center justify-center">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+            <div className="bg-background/90 rounded-full p-2">
+              <Replace size={16} className="text-foreground" />
+            </div>
+            <span className="font-body text-xs text-background font-medium bg-foreground/70 px-2 py-1 rounded">Replace</span>
+          </div>
+        </div>
+      </div>
+      {onRemove && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
+          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+        >
+          <X size={12} />
+        </button>
+      )}
+      {onAltChange && (
+        <Input
+          value={alt}
+          onChange={(e) => onAltChange(e.target.value)}
+          placeholder="Alt text..."
+          className="mt-2 text-xs h-8"
+        />
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
+      />
+    </div>
+  );
 };
 
+// Add new slide placeholder
+const AddSlideButton = ({ onAdd }: { onAdd: (dataUrl: string) => void }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div>
+      <button
+        onClick={() => inputRef.current?.click()}
+        className="w-full h-40 rounded-lg border-2 border-dashed border-border hover:border-primary/50 bg-secondary/20 hover:bg-secondary/40 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer"
+      >
+        <Plus size={24} className="text-muted-foreground" />
+        <span className="font-body text-xs text-muted-foreground">Add Slide</span>
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          if (file.size > 5 * 1024 * 1024) { alert("Image must be under 5MB"); return; }
+          const reader = new FileReader();
+          reader.onload = (ev) => { if (ev.target?.result) onAdd(ev.target.result as string); };
+          reader.readAsDataURL(file);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+};
+
+// Single image upload card (for collection banner / about)
+const SingleImageUploader = ({ src, label, onUpload }: { src: string; label: string; onUpload: (dataUrl: string) => void }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div className="space-y-2">
+      <Label className="font-body text-sm">{label}</Label>
+      <div
+        className="relative group overflow-hidden rounded-lg border border-border cursor-pointer"
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const file = e.dataTransfer.files[0];
+          if (!file || !file.type.startsWith("image/")) return;
+          if (file.size > 5 * 1024 * 1024) { alert("Image must be under 5MB"); return; }
+          const reader = new FileReader();
+          reader.onload = (ev) => { if (ev.target?.result) onUpload(ev.target.result as string); };
+          reader.readAsDataURL(file);
+        }}
+      >
+        <img src={src} alt={label} className="w-full h-48 object-cover" />
+        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-all flex items-center justify-center">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+            <div className="bg-background/90 rounded-full p-2.5">
+              <Upload size={18} className="text-foreground" />
+            </div>
+            <span className="font-body text-sm text-background font-medium bg-foreground/70 px-3 py-1.5 rounded">Upload New Image</span>
+          </div>
+        </div>
+      </div>
+      <p className="font-body text-xs text-muted-foreground">Click or drag & drop to replace. Max 5MB.</p>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          if (file.size > 5 * 1024 * 1024) { alert("Image must be under 5MB"); return; }
+          const reader = new FileReader();
+          reader.onload = (ev) => { if (ev.target?.result) onUpload(ev.target.result as string); };
+          reader.readAsDataURL(file);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+};
+
+// ---- Main Component ----
 const AdminPageEditor = () => {
   const { pageId } = useParams<{ pageId: string }>();
   const navigate = useNavigate();
@@ -131,29 +296,32 @@ const AdminPageEditor = () => {
   const isHome = pageId === "home" || pageId === "1";
   const pageKey = isHome ? "home" : (pageId || "");
 
-  // Home page state
   const [hero, setHero] = useState<HeroContent>(defaultHomeContent.hero);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(defaultHeroSlides);
   const [announcement, setAnnouncement] = useState<AnnouncementContent>(defaultHomeContent.announcement);
   const [collectionBanner, setCollectionBanner] = useState<CollectionBannerContent>(defaultHomeContent.collectionBanner);
+  const [collectionImage, setCollectionImage] = useState<string>(collectionBannerImg);
+  const [aboutImage, setAboutImage] = useState<string>(aboutBrandImg);
   const [about, setAbout] = useState<AboutContent>(defaultHomeContent.about);
   const [footer, setFooter] = useState<FooterContent>(defaultHomeContent.footer);
   const [sections, setSections] = useState<SectionMeta[]>(defaultSections);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Simple page state
   const [simplePage, setSimplePage] = useState<SimplePageContent>(
     simplePageDefaults[pageKey] || { title: "", metaDescription: "", heading: "", bodyText: "" }
   );
 
-  // Load saved content from localStorage
   useEffect(() => {
     const saved = localStorage.getItem(`page_content_${pageKey}`);
     if (saved) {
       const data = JSON.parse(saved);
       if (isHome) {
         if (data.hero) setHero(data.hero);
+        if (data.heroSlides) setHeroSlides(data.heroSlides);
         if (data.announcement) setAnnouncement(data.announcement);
         if (data.collectionBanner) setCollectionBanner(data.collectionBanner);
+        if (data.collectionImage) setCollectionImage(data.collectionImage);
+        if (data.aboutImage) setAboutImage(data.aboutImage);
         if (data.about) setAbout(data.about);
         if (data.footer) setFooter(data.footer);
         if (data.sections) setSections(data.sections);
@@ -167,7 +335,9 @@ const AdminPageEditor = () => {
 
   const handleSave = () => {
     if (isHome) {
-      localStorage.setItem(`page_content_${pageKey}`, JSON.stringify({ hero, announcement, collectionBanner, about, footer, sections }));
+      localStorage.setItem(`page_content_${pageKey}`, JSON.stringify({
+        hero, heroSlides, announcement, collectionBanner, collectionImage, aboutImage, about, footer, sections,
+      }));
     } else {
       localStorage.setItem(`page_content_${pageKey}`, JSON.stringify(simplePage));
     }
@@ -184,19 +354,14 @@ const AdminPageEditor = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/admin/pages")}>
             <ArrowLeft size={20} />
           </Button>
           <div>
-            <h1 className="font-heading text-2xl md:text-3xl font-semibold text-foreground">
-              Edit: {pageName}
-            </h1>
-            <p className="font-body text-sm text-muted-foreground">
-              Customize the content of your {pageName.toLowerCase()} page
-            </p>
+            <h1 className="font-heading text-2xl md:text-3xl font-semibold text-foreground">Edit: {pageName}</h1>
+            <p className="font-body text-sm text-muted-foreground">Customize the content of your {pageName.toLowerCase()} page</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -214,8 +379,15 @@ const AdminPageEditor = () => {
       {isHome ? (
         <HomePageEditor
           hero={hero} setHero={(v) => { setHero(v); markChanged(); }}
+          heroSlides={heroSlides}
+          onSlideReplace={(i, src) => { const s = [...heroSlides]; s[i] = { ...s[i], src }; setHeroSlides(s); markChanged(); }}
+          onSlideAltChange={(i, alt) => { const s = [...heroSlides]; s[i] = { ...s[i], alt }; setHeroSlides(s); markChanged(); }}
+          onSlideRemove={(i) => { setHeroSlides(heroSlides.filter((_, idx) => idx !== i)); markChanged(); }}
+          onSlideAdd={(src) => { setHeroSlides([...heroSlides, { src, alt: `Slide ${heroSlides.length + 1}` }]); markChanged(); }}
           announcement={announcement} setAnnouncement={(v) => { setAnnouncement(v); markChanged(); }}
           collectionBanner={collectionBanner} setCollectionBanner={(v) => { setCollectionBanner(v); markChanged(); }}
+          collectionImage={collectionImage} onCollectionImageChange={(src) => { setCollectionImage(src); markChanged(); }}
+          aboutImage={aboutImage} onAboutImageChange={(src) => { setAboutImage(src); markChanged(); }}
           about={about} setAbout={(v) => { setAbout(v); markChanged(); }}
           footer={footer} setFooter={(v) => { setFooter(v); markChanged(); }}
           sections={sections} toggleSection={toggleSection}
@@ -230,16 +402,29 @@ const AdminPageEditor = () => {
 // ---- Home Page Editor ----
 interface HomeEditorProps {
   hero: HeroContent; setHero: (v: HeroContent) => void;
+  heroSlides: HeroSlide[];
+  onSlideReplace: (index: number, src: string) => void;
+  onSlideAltChange: (index: number, alt: string) => void;
+  onSlideRemove: (index: number) => void;
+  onSlideAdd: (src: string) => void;
   announcement: AnnouncementContent; setAnnouncement: (v: AnnouncementContent) => void;
   collectionBanner: CollectionBannerContent; setCollectionBanner: (v: CollectionBannerContent) => void;
+  collectionImage: string; onCollectionImageChange: (src: string) => void;
+  aboutImage: string; onAboutImageChange: (src: string) => void;
   about: AboutContent; setAbout: (v: AboutContent) => void;
   footer: FooterContent; setFooter: (v: FooterContent) => void;
   sections: SectionMeta[]; toggleSection: (id: string) => void;
 }
 
-const HomePageEditor = ({ hero, setHero, announcement, setAnnouncement, collectionBanner, setCollectionBanner, about, setAbout, footer, setFooter, sections, toggleSection }: HomeEditorProps) => (
+const HomePageEditor = ({
+  hero, setHero, heroSlides, onSlideReplace, onSlideAltChange, onSlideRemove, onSlideAdd,
+  announcement, setAnnouncement,
+  collectionBanner, setCollectionBanner, collectionImage, onCollectionImageChange,
+  aboutImage, onAboutImageChange,
+  about, setAbout, footer, setFooter, sections, toggleSection,
+}: HomeEditorProps) => (
   <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-    {/* Sidebar - Section Order & Visibility */}
+    {/* Sidebar */}
     <div className="bg-card border border-border rounded-xl p-4 h-fit">
       <h3 className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-4">Page Sections</h3>
       <div className="space-y-1">
@@ -256,9 +441,9 @@ const HomePageEditor = ({ hero, setHero, announcement, setAnnouncement, collecti
       </div>
     </div>
 
-    {/* Main Content Editor */}
+    {/* Main Editor */}
     <div className="space-y-6">
-      <Tabs defaultValue="announcement" className="w-full">
+      <Tabs defaultValue="hero" className="w-full">
         <TabsList className="w-full justify-start bg-card border border-border h-auto p-1 flex-wrap">
           <TabsTrigger value="announcement" className="font-body text-xs">Announcement</TabsTrigger>
           <TabsTrigger value="hero" className="font-body text-xs">Hero</TabsTrigger>
@@ -268,7 +453,7 @@ const HomePageEditor = ({ hero, setHero, announcement, setAnnouncement, collecti
           <TabsTrigger value="seo" className="font-body text-xs">SEO</TabsTrigger>
         </TabsList>
 
-        {/* Announcement Tab */}
+        {/* Announcement */}
         <TabsContent value="announcement">
           <EditorCard title="Announcement Bar" description="The scrolling bar at the top of the page">
             <div className="space-y-4">
@@ -289,60 +474,89 @@ const HomePageEditor = ({ hero, setHero, announcement, setAnnouncement, collecti
           </EditorCard>
         </TabsContent>
 
-        {/* Hero Tab */}
+        {/* Hero */}
         <TabsContent value="hero">
-          <EditorCard title="Hero Section" description="Main banner area with slideshow">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="font-body text-sm">Title Line 1</Label>
-                <Input value={hero.titleLine1} onChange={e => setHero({ ...hero, titleLine1: e.target.value })} />
+          <div className="space-y-6">
+            {/* Hero Slides Manager */}
+            <EditorCard title="Hero Slides" description="Manage the slideshow images. Click to replace, drag & drop supported.">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {heroSlides.map((slide, i) => (
+                  <ImageUploader
+                    key={i}
+                    src={slide.src}
+                    alt={slide.alt}
+                    onUpload={(src) => onSlideReplace(i, src)}
+                    onRemove={heroSlides.length > 1 ? () => onSlideRemove(i) : undefined}
+                    onAltChange={(alt) => onSlideAltChange(i, alt)}
+                  />
+                ))}
+                {heroSlides.length < 10 && (
+                  <AddSlideButton onAdd={onSlideAdd} />
+                )}
+              </div>
+              <p className="font-body text-xs text-muted-foreground">{heroSlides.length} slide{heroSlides.length !== 1 ? "s" : ""} · Max 10 slides · Max 5MB per image</p>
+            </EditorCard>
+
+            {/* Hero Text */}
+            <EditorCard title="Hero Text & CTA" description="Overlay text on the hero banner">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="font-body text-sm">Title Line 1</Label>
+                  <Input value={hero.titleLine1} onChange={e => setHero({ ...hero, titleLine1: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-body text-sm">Title Line 2 (italic)</Label>
+                  <Input value={hero.titleLine2} onChange={e => setHero({ ...hero, titleLine2: e.target.value })} />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label className="font-body text-sm">Title Line 2 (italic)</Label>
-                <Input value={hero.titleLine2} onChange={e => setHero({ ...hero, titleLine2: e.target.value })} />
+                <Label className="font-body text-sm">Subtitle</Label>
+                <Textarea value={hero.subtitle} onChange={e => setHero({ ...hero, subtitle: e.target.value })} rows={3} />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="font-body text-sm">Subtitle</Label>
-              <Textarea value={hero.subtitle} onChange={e => setHero({ ...hero, subtitle: e.target.value })} rows={3} />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="font-body text-sm">CTA Button Text</Label>
-                <Input value={hero.ctaText} onChange={e => setHero({ ...hero, ctaText: e.target.value })} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="font-body text-sm">CTA Button Text</Label>
+                  <Input value={hero.ctaText} onChange={e => setHero({ ...hero, ctaText: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-body text-sm">CTA Link</Label>
+                  <Input value={hero.ctaLink} onChange={e => setHero({ ...hero, ctaLink: e.target.value })} />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="font-body text-sm">CTA Link</Label>
-                <Input value={hero.ctaLink} onChange={e => setHero({ ...hero, ctaLink: e.target.value })} />
+              <Separator />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between">
+                  <Label className="font-body text-sm">Auto-slide</Label>
+                  <Switch checked={hero.autoSlide} onCheckedChange={v => setHero({ ...hero, autoSlide: v })} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-body text-sm">Slide Interval (ms)</Label>
+                  <Input type="number" value={hero.slideInterval} onChange={e => setHero({ ...hero, slideInterval: Number(e.target.value) })} />
+                </div>
               </div>
-            </div>
-            <Separator />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-body text-sm">Auto-slide</Label>
-                <Switch checked={hero.autoSlide} onCheckedChange={v => setHero({ ...hero, autoSlide: v })} />
-              </div>
-              <div className="space-y-2">
-                <Label className="font-body text-sm">Slide Interval (ms)</Label>
-                <Input type="number" value={hero.slideInterval} onChange={e => setHero({ ...hero, slideInterval: Number(e.target.value) })} />
-              </div>
-            </div>
-            <PreviewBox>
-              <div className="bg-charcoal/80 p-6 rounded-lg">
-                <p className="font-heading text-2xl font-light text-primary-foreground leading-tight">
-                  {hero.titleLine1}<br />
-                  <span className="font-semibold italic">{hero.titleLine2}</span>
-                </p>
-                <p className="font-body text-xs text-primary-foreground/70 mt-2 max-w-xs">{hero.subtitle}</p>
-                <span className="inline-block mt-3 bg-primary-foreground text-charcoal px-4 py-2 font-body text-[10px] tracking-[0.15em] uppercase">{hero.ctaText}</span>
-              </div>
-            </PreviewBox>
-          </EditorCard>
+              <PreviewBox>
+                <div className="relative rounded-lg overflow-hidden">
+                  <img src={heroSlides[0]?.src} alt="" className="w-full h-48 object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-charcoal/50 via-transparent to-transparent" />
+                  <div className="absolute bottom-4 left-4">
+                    <p className="font-heading text-xl font-light text-primary-foreground leading-tight">
+                      {hero.titleLine1}<br />
+                      <span className="font-semibold italic">{hero.titleLine2}</span>
+                    </p>
+                    <p className="font-body text-[10px] text-primary-foreground/70 mt-1 max-w-[200px]">{hero.subtitle}</p>
+                    <span className="inline-block mt-2 bg-primary-foreground text-charcoal px-3 py-1.5 font-body text-[9px] tracking-[0.15em] uppercase">{hero.ctaText}</span>
+                  </div>
+                </div>
+              </PreviewBox>
+            </EditorCard>
+          </div>
         </TabsContent>
 
-        {/* Collection Banner Tab */}
+        {/* Collection Banner */}
         <TabsContent value="collection">
           <EditorCard title="Collection Banner" description="Full-width parallax banner section">
+            <SingleImageUploader src={collectionImage} label="Banner Image" onUpload={onCollectionImageChange} />
+            <Separator />
             <div className="space-y-2">
               <Label className="font-body text-sm">Subtitle</Label>
               <Input value={collectionBanner.subtitle} onChange={e => setCollectionBanner({ ...collectionBanner, subtitle: e.target.value })} />
@@ -362,18 +576,25 @@ const HomePageEditor = ({ hero, setHero, announcement, setAnnouncement, collecti
               </div>
             </div>
             <PreviewBox>
-              <div className="bg-charcoal/60 p-8 rounded-lg text-center">
-                <p className="font-body text-[10px] uppercase tracking-[0.3em] text-primary-foreground/70 mb-2">{collectionBanner.subtitle}</p>
-                <p className="font-heading text-2xl font-light text-primary-foreground italic">{collectionBanner.title}</p>
-                <span className="inline-block mt-3 border border-primary-foreground/50 text-primary-foreground px-4 py-1.5 font-body text-[10px] tracking-[0.15em] uppercase">{collectionBanner.ctaText}</span>
+              <div className="relative rounded-lg overflow-hidden">
+                <img src={collectionImage} alt="" className="w-full h-48 object-cover" />
+                <div className="absolute inset-0 bg-charcoal/40 flex items-center justify-center text-center">
+                  <div>
+                    <p className="font-body text-[10px] uppercase tracking-[0.3em] text-primary-foreground/70 mb-1">{collectionBanner.subtitle}</p>
+                    <p className="font-heading text-2xl font-light text-primary-foreground italic">{collectionBanner.title}</p>
+                    <span className="inline-block mt-2 border border-primary-foreground/50 text-primary-foreground px-4 py-1 font-body text-[10px] tracking-[0.15em] uppercase">{collectionBanner.ctaText}</span>
+                  </div>
+                </div>
               </div>
             </PreviewBox>
           </EditorCard>
         </TabsContent>
 
-        {/* About Tab */}
+        {/* About */}
         <TabsContent value="about">
           <EditorCard title="About Brand" description="Brand story section with image and text">
+            <SingleImageUploader src={aboutImage} label="About Section Image" onUpload={onAboutImageChange} />
+            <Separator />
             <div className="space-y-2">
               <Label className="font-body text-sm">Section Title</Label>
               <Input value={about.title} onChange={e => setAbout({ ...about, title: e.target.value })} />
@@ -393,7 +614,7 @@ const HomePageEditor = ({ hero, setHero, announcement, setAnnouncement, collecti
           </EditorCard>
         </TabsContent>
 
-        {/* Footer Tab */}
+        {/* Footer */}
         <TabsContent value="footer">
           <EditorCard title="Footer" description="Newsletter and footer content">
             <div className="space-y-2">
@@ -417,7 +638,7 @@ const HomePageEditor = ({ hero, setHero, announcement, setAnnouncement, collecti
           </EditorCard>
         </TabsContent>
 
-        {/* SEO Tab */}
+        {/* SEO */}
         <TabsContent value="seo">
           <EditorCard title="SEO Settings" description="Search engine optimization for this page">
             <div className="space-y-2">
@@ -466,7 +687,7 @@ const SimplePageEditor = ({ page, setPage }: { page: SimplePageContent; setPage:
   </div>
 );
 
-// ---- Reusable Components ----
+// ---- Reusable ----
 const EditorCard = ({ title, description, children }: { title: string; description: string; children: React.ReactNode }) => (
   <div className="bg-card border border-border rounded-xl p-6 space-y-5">
     <div>
