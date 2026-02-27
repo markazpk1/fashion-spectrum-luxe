@@ -45,6 +45,9 @@ import AdminMedia from "./pages/admin/AdminMedia";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminSmtpSettings from "./pages/admin/AdminSmtpSettings";
+import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
+import AdminEmailMarketing from "./pages/admin/AdminEmailMarketing";
 
 const queryClient = new QueryClient();
 
@@ -118,6 +121,9 @@ const AnimatedRoutes = () => {
             <Route path="media" element={<AdminMedia />} />
             <Route path="messages" element={<AdminMessages />} />
             <Route path="notifications" element={<AdminNotifications />} />
+            <Route path="smtp-settings" element={<AdminSmtpSettings />} />
+            <Route path="email-templates" element={<AdminEmailTemplates />} />
+            <Route path="email-marketing" element={<AdminEmailMarketing />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 
