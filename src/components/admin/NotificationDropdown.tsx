@@ -76,7 +76,7 @@ const typeColors = {
 };
 
 const NotificationDropdown = () => {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
