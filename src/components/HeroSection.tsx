@@ -1,12 +1,15 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { HeroContent, HeroSlide } from "@/hooks/usePageContent";
+
+// Default imports as fallback
 import heroKaftan1 from "@/assets/hero-kaftan-1.jpg";
 import heroKaftan2 from "@/assets/hero-kaftan-2.jpg";
 import heroKaftan3 from "@/assets/hero-kaftan-3.jpg";
 import heroKaftan4 from "@/assets/hero-kaftan-4.jpg";
 import heroKaftan5 from "@/assets/hero-kaftan-5.jpg";
 
-const slides = [
+const defaultSlides: HeroSlide[] = [
   { src: heroKaftan1, alt: "Luxurious jewel-toned kaftan collection" },
   { src: heroKaftan2, alt: "Black and gold embroidered kaftan" },
   { src: heroKaftan3, alt: "Turquoise and gold ornate kaftan" },
@@ -14,7 +17,20 @@ const slides = [
   { src: heroKaftan5, alt: "Crimson embroidered kaftan" },
 ];
 
-const HeroSection = () => {
+interface Props {
+  content?: HeroContent;
+  slides?: HeroSlide[];
+}
+
+const HeroSection = ({ content, slides }: Props) => {
+  const activeSlides = slides && slides.length > 0 ? slides : defaultSlides;
+  const titleLine1 = content?.titleLine1 || "Luxurious";
+  const titleLine2 = content?.titleLine2 || "Kaftan Collection";
+  const subtitle = content?.subtitle || "Discover our latest collection of handcrafted kaftans, dresses & resort wear designed for the modern woman.";
+  const ctaText = content?.ctaText || "Shop Collection";
+  const ctaLink = content?.ctaLink || "#new-arrivals";
+  const slideInterval = content?.slideInterval || 4500;
+
   const sectionRef = useRef<HTMLElement>(null);
   const [current, setCurrent] = useState(0);
   const { scrollYProgress } = useScroll({
@@ -26,17 +42,18 @@ const HeroSection = () => {
   const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   const next = useCallback(() => {
-    setCurrent((prev) => (prev + 1) % slides.length);
-  }, []);
+    setCurrent((prev) => (prev + 1) % activeSlides.length);
+  }, [activeSlides.length]);
 
   const prev = useCallback(() => {
-    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
-  }, []);
+    setCurrent((prev) => (prev - 1 + activeSlides.length) % activeSlides.length);
+  }, [activeSlides.length]);
 
   useEffect(() => {
-    const timer = setInterval(next, 4500);
+    if (content?.autoSlide === false) return;
+    const timer = setInterval(next, slideInterval);
     return () => clearInterval(timer);
-  }, [next]);
+  }, [next, slideInterval, content?.autoSlide]);
 
   return (
     <section
@@ -55,7 +72,7 @@ const HeroSection = () => {
         }
       }}
     >
-      {slides.map((slide, i) => (
+      {activeSlides.map((slide, i) => (
         <motion.img
           key={i}
           src={slide.src}
@@ -85,7 +102,7 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.5 }}
             className="font-heading text-4xl md:text-6xl lg:text-7xl font-light text-primary-foreground leading-tight mb-4"
           >
-            Luxurious
+            {titleLine1}
             <br />
             <motion.span
               initial={{ opacity: 0, x: -20 }}
@@ -93,7 +110,7 @@ const HeroSection = () => {
               transition={{ duration: 0.8, delay: 0.8 }}
               className="font-semibold italic"
             >
-              Kaftan Collection
+              {titleLine2}
             </motion.span>
           </motion.h1>
           <motion.p
@@ -102,7 +119,7 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 1 }}
             className="font-body text-sm md:text-base text-primary-foreground/80 tracking-wide mb-8 max-w-sm"
           >
-            Discover our latest collection of handcrafted kaftans, dresses & resort wear designed for the modern woman.
+            {subtitle}
           </motion.p>
           <motion.a
             initial={{ opacity: 0, y: 10 }}
@@ -110,17 +127,17 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 1.2 }}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            href="#new-arrivals"
+            href={ctaLink}
             className="inline-block font-body text-xs tracking-[0.2em] uppercase bg-primary-foreground text-charcoal px-8 py-4 hover:bg-gold hover:text-primary-foreground transition-all duration-500"
           >
-            Shop Collection
+            {ctaText}
           </motion.a>
         </motion.div>
       </motion.div>
 
       {/* Slide indicators */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-        {slides.map((_, i) => (
+        {activeSlides.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}

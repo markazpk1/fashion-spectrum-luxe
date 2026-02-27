@@ -6,40 +6,60 @@ import CollectionBanner from "@/components/CollectionBanner";
 import AboutBrand from "@/components/AboutBrand";
 import Footer from "@/components/Footer";
 import { newArrivals, saleProducts, bestSellers } from "@/lib/products";
+import { useHomePageContent, isSectionEnabled } from "@/hooks/usePageContent";
 
 const Index = () => {
+  const content = useHomePageContent();
+  const isEnabled = (id: string) => isSectionEnabled(content.sections, id);
+
   return (
     <div className="min-h-screen bg-background pb-mobile-nav">
-      <AnnouncementBar />
+      {isEnabled("announcement") && (
+        <AnnouncementBar content={content.announcement} />
+      )}
       <Navbar />
-      <HeroSection />
+      {isEnabled("hero") && (
+        <HeroSection content={content.hero} slides={content.heroSlides} />
+      )}
 
-      <ProductSection
-        id="new-arrivals"
-        title="New Arrivals"
-        products={newArrivals}
-        viewAllLink="/new-arrivals"
-      />
-
-      <CollectionBanner />
-
-      <ProductSection
-        id="sale"
-        title="Summer Sale"
-        products={saleProducts}
-        viewAllLink="/sale"
-      />
-
-      <section id="best-sellers">
+      {isEnabled("newArrivals") && (
         <ProductSection
-          title="Best Sellers"
-          products={bestSellers}
-          viewAllLink="/best-sellers"
+          id="new-arrivals"
+          title="New Arrivals"
+          products={newArrivals}
+          viewAllLink="/new-arrivals"
         />
-      </section>
+      )}
 
-      <AboutBrand />
-      <Footer />
+      {isEnabled("collectionBanner") && (
+        <CollectionBanner content={content.collectionBanner} image={content.collectionImage} />
+      )}
+
+      {isEnabled("saleBanner") && (
+        <ProductSection
+          id="sale"
+          title="Summer Sale"
+          products={saleProducts}
+          viewAllLink="/sale"
+        />
+      )}
+
+      {isEnabled("bestSellers") && (
+        <section id="best-sellers">
+          <ProductSection
+            title="Best Sellers"
+            products={bestSellers}
+            viewAllLink="/best-sellers"
+          />
+        </section>
+      )}
+
+      {isEnabled("about") && (
+        <AboutBrand content={content.about} image={content.aboutImage} />
+      )}
+      {isEnabled("footer") && (
+        <Footer content={content.footer} />
+      )}
     </div>
   );
 };

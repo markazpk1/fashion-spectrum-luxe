@@ -1,8 +1,20 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import collectionBanner from "@/assets/collection-banner.jpg";
+import collectionBannerDefault from "@/assets/collection-banner.jpg";
+import { CollectionBannerContent } from "@/hooks/usePageContent";
 
-const CollectionBanner = () => {
+interface Props {
+  content?: CollectionBannerContent;
+  image?: string;
+}
+
+const CollectionBanner = ({ content, image }: Props) => {
+  const bannerImage = image || collectionBannerDefault;
+  const subtitle = content?.subtitle || "Latest Collection";
+  const title = content?.title || "Golden Lady";
+  const ctaText = content?.ctaText || "Explore Collection";
+  const ctaLink = content?.ctaLink || "#";
+
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -15,7 +27,7 @@ const CollectionBanner = () => {
   return (
     <section ref={sectionRef} id="collections" className="relative h-[50vh] md:h-[70vh] overflow-hidden">
       <motion.img
-        src={collectionBanner}
+        src={bannerImage}
         alt="FashionSpectrum golden collection"
         className="absolute inset-0 w-full h-full object-cover"
         style={{ y, scale }}
@@ -36,7 +48,7 @@ const CollectionBanner = () => {
             transition={{ duration: 1.2, delay: 0.2 }}
             className="font-body text-xs uppercase text-primary-foreground/80 mb-4"
           >
-            Latest Collection
+            {subtitle}
           </motion.p>
           <motion.h2
             initial={{ opacity: 0, scale: 0.9 }}
@@ -45,7 +57,7 @@ const CollectionBanner = () => {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="font-heading text-4xl md:text-6xl lg:text-7xl font-light text-primary-foreground mb-6 italic"
           >
-            Golden Lady
+            {title}
           </motion.h2>
           <motion.a
             initial={{ opacity: 0 }}
@@ -53,10 +65,10 @@ const CollectionBanner = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.7 }}
             whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,1)", color: "#1f1a17" }}
-            href="#"
+            href={ctaLink}
             className="inline-block font-body text-xs tracking-[0.2em] uppercase border border-primary-foreground text-primary-foreground px-8 py-3 transition-all duration-500"
           >
-            Explore Collection
+            {ctaText}
           </motion.a>
         </motion.div>
       </div>
