@@ -85,6 +85,77 @@ const CardBrandIcon = ({ type, size = 24 }: { type: string; size?: number }) => 
   return <CreditCard size={size} className="text-muted-foreground" />;
 };
 
+const CardFlipPreview = ({ name, number, expiry, cvv, type, isCvvFocused }: {
+  name: string; number: string; expiry: string; cvv: string; type: string; isCvvFocused: boolean;
+}) => {
+  const displayNumber = number || "•••• •••• •••• ••••";
+  const displayName = name || "YOUR NAME";
+  const displayExpiry = expiry || "MM/YY";
+
+  const brandGradients: Record<string, string> = {
+    Visa: "from-[#1A1F71] to-[#2B3990]",
+    Mastercard: "from-[#1A1A2E] to-[#16213E]",
+    Amex: "from-[#2E77BC] to-[#1B4F72]",
+    Discover: "from-[#FF6600] to-[#CC5200]",
+    Diners: "from-[#0079BE] to-[#005A8C]",
+    JCB: "from-[#0B7B3E] to-[#085C2E]",
+    UnionPay: "from-[#E21836] to-[#B5132B]",
+    Card: "from-[#374151] to-[#1F2937]",
+  };
+
+  const gradient = brandGradients[type] || brandGradients.Card;
+
+  return (
+    <div className="my-4" style={{ perspective: "1000px" }}>
+      <motion.div
+        animate={{ rotateY: isCvvFocused ? 180 : 0 }}
+        transition={{ duration: 0.6, ease: "easeInOut" }}
+        style={{ transformStyle: "preserve-3d" }}
+        className="relative w-full aspect-[1.586/1] max-w-[320px] mx-auto"
+      >
+        {/* Front */}
+        <div
+          className={`absolute inset-0 rounded-xl bg-gradient-to-br ${gradient} p-5 flex flex-col justify-between text-white shadow-lg`}
+          style={{ backfaceVisibility: "hidden" }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-7 rounded bg-yellow-300/80" />
+            <CardBrandIcon type={type} size={32} />
+          </div>
+          <p className="font-mono text-base sm:text-lg tracking-[0.2em] mt-auto">{displayNumber}</p>
+          <div className="flex items-end justify-between mt-2">
+            <div>
+              <p className="text-[9px] uppercase tracking-wider opacity-70">Card Holder</p>
+              <p className="font-body text-xs sm:text-sm uppercase tracking-wider truncate max-w-[180px]">{displayName}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] uppercase tracking-wider opacity-70">Expires</p>
+              <p className="font-body text-xs sm:text-sm tracking-wider">{displayExpiry}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Back */}
+        <div
+          className={`absolute inset-0 rounded-xl bg-gradient-to-br ${gradient} flex flex-col justify-center shadow-lg`}
+          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+        >
+          <div className="w-full h-10 bg-black/40 mt-6" />
+          <div className="px-5 mt-4">
+            <p className="text-[9px] text-white/70 uppercase tracking-wider text-right mb-1">CVV</p>
+            <div className="bg-white/20 rounded px-3 py-2 text-right">
+              <p className="font-mono text-white text-sm tracking-[0.3em]">{cvv || "•••"}</p>
+            </div>
+          </div>
+          <div className="flex justify-end px-5 mt-auto mb-5">
+            <CardBrandIcon type={type} size={28} />
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const sidebarItems: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "profile", label: "My Profile", icon: User },
   { key: "orders", label: "My Orders", icon: Package },
@@ -414,7 +485,9 @@ const PaymentsTab = () => {
     onSave: () => void;
     onClose: () => void;
     saveLabel: string;
-  }) => (
+  }) => {
+    const [cvvFocused, setCvvFocused] = useState(false);
+    return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/60" onClick={onClose} />
       <motion.div
@@ -429,6 +502,16 @@ const PaymentsTab = () => {
             <X size={18} />
           </button>
         </div>
+
+        {/* Animated Card Flip Preview */}
+        <CardFlipPreview
+          name={cardState.name}
+          number={cardState.number}
+          expiry={cardState.expiry}
+          cvv={cardState.cvv}
+          type={detectCardType(cardState.number)}
+          isCvvFocused={cvvFocused}
+        />
 
         <div className="space-y-4">
           <div className="space-y-1.5">
@@ -473,6 +556,8 @@ const PaymentsTab = () => {
                 placeholder="•••"
                 value={cardState.cvv}
                 onChange={e => setCardState(c => ({ ...c, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
+                onFocus={() => setCvvFocused(true)}
+                onBlur={() => setCvvFocused(false)}
                 className="h-10 bg-card border-border font-body"
                 type="password"
               />
@@ -491,6 +576,7 @@ const PaymentsTab = () => {
       </motion.div>
     </div>
   );
+  };
 
   return (
     <div className="space-y-6">
