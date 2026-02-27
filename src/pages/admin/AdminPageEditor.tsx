@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Eye, GripVertical, Image as ImageIcon, Type, FileText, Layout, Mail, Globe, Upload, X, Plus, Replace } from "lucide-react";
+import { ArrowLeft, Save, Eye, GripVertical, Image as ImageIcon, Type, FileText, Layout, Mail, Globe, Upload, X, Plus, Replace, RotateCcw } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -350,6 +351,25 @@ const AdminPageEditor = () => {
     markChanged();
   };
 
+  const handleReset = () => {
+    if (isHome) {
+      setHero(defaultHomeContent.hero);
+      setHeroSlides(defaultHeroSlides);
+      setAnnouncement(defaultHomeContent.announcement);
+      setCollectionBanner(defaultHomeContent.collectionBanner);
+      setCollectionImage(collectionBannerImg);
+      setAboutImage(aboutBrandImg);
+      setAbout(defaultHomeContent.about);
+      setFooter(defaultHomeContent.footer);
+      setSections(defaultSections);
+    } else {
+      setSimplePage(simplePageDefaults[pageKey] || { title: "", metaDescription: "", heading: "", bodyText: "" });
+    }
+    localStorage.removeItem(`page_content_${pageKey}`);
+    setHasChanges(false);
+    toast({ title: "Page reset to defaults" });
+  };
+
   const pageName = isHome ? "Home" : (simplePageDefaults[pageKey]?.title || pageKey);
 
   return (
@@ -365,6 +385,27 @@ const AdminPageEditor = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive">
+                <RotateCcw size={14} /> Reset
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset to defaults?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will restore all content on the {pageName} page to its original defaults. Any customizations will be lost.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Reset
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Button variant="outline" size="sm" asChild>
             <a href={isHome ? "/" : `/${pageKey}`} target="_blank" rel="noopener noreferrer" className="gap-2">
               <Eye size={14} /> Preview
