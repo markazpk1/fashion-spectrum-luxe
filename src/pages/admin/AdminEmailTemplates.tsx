@@ -263,28 +263,97 @@ const AdminEmailTemplates = () => {
   };
 
   // Editor view
+  const previewHtml = editData?.body
+    ?.replace(/\{\{customer_name\}\}/g, "Sarah Johnson")
+    .replace(/\{\{order_id\}\}/g, "1042")
+    .replace(/\{\{order_total\}\}/g, "₦85,000")
+    .replace(/\{\{order_date\}\}/g, "Feb 27, 2026")
+    .replace(/\{\{tracking_number\}\}/g, "NG12345678")
+    .replace(/\{\{carrier\}\}/g, "DHL Express")
+    .replace(/\{\{delivery_date\}\}/g, "Mar 3, 2026")
+    .replace(/\{\{cart_total\}\}/g, "₦45,000")
+    .replace(/\{\{cart_items\}\}/g, "Royal Blue Agbada × 1, Gold Kaftan × 1") || "";
+
   if (editing && editData) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4">
+        {/* Header - mobile friendly */}
+        <div className="flex flex-col gap-3">
           <div>
-            <h1 className="font-heading text-2xl font-bold text-foreground">
+            <h1 className="font-heading text-lg sm:text-2xl font-bold text-foreground truncate">
               Edit: {editData.name}
             </h1>
-            <p className="text-sm font-body text-muted-foreground mt-1">{editData.description}</p>
+            <p className="text-xs sm:text-sm font-body text-muted-foreground mt-0.5">{editData.description}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={cancelEdit} className="font-body">
+            <Button variant="outline" size="sm" onClick={cancelEdit} className="font-body flex-1 sm:flex-none">
               Cancel
             </Button>
-            <Button onClick={saveEdit} className="font-body">
-              <Check size={14} className="mr-1.5" /> Save Template
+            <Button size="sm" onClick={saveEdit} className="font-body flex-1 sm:flex-none">
+              <Check size={14} className="mr-1" /> Save
             </Button>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Editor */}
+        {/* Tabs for mobile, side-by-side on desktop */}
+        <div className="block lg:hidden">
+          <Tabs defaultValue="editor">
+            <TabsList className="w-full">
+              <TabsTrigger value="editor" className="flex-1 font-body text-xs">
+                <Code2 size={14} className="mr-1" /> Editor
+              </TabsTrigger>
+              <TabsTrigger value="preview" className="flex-1 font-body text-xs">
+                <Eye size={14} className="mr-1" /> Preview
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="editor" className="mt-3">
+              <Card>
+                <CardContent className="pt-4 space-y-3">
+                  <div>
+                    <Label className="font-body text-xs">Template Name</Label>
+                    <Input
+                      value={editData.name}
+                      onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                      className="font-body mt-1 h-9 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="font-body text-xs">Subject Line</Label>
+                    <Input
+                      value={editData.subject}
+                      onChange={(e) => setEditData({ ...editData, subject: e.target.value })}
+                      className="font-body mt-1 h-9 text-sm"
+                    />
+                    <p className="text-[10px] font-body text-muted-foreground mt-0.5">
+                      Use {"{{variable}}"} for dynamic content
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="font-body text-xs">HTML Body</Label>
+                    <Textarea
+                      value={editData.body}
+                      onChange={(e) => setEditData({ ...editData, body: e.target.value })}
+                      className="font-mono text-[11px] mt-1 min-h-[250px]"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="preview" className="mt-3">
+              <Card className="overflow-hidden">
+                <div className="bg-secondary/30 px-3 py-1.5 border-b border-border">
+                  <p className="text-[10px] font-body text-muted-foreground truncate">Subject: {editData.subject}</p>
+                </div>
+                <CardContent className="p-0">
+                  <div className="p-3 overflow-x-auto" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Desktop: side-by-side */}
+        <div className="hidden lg:grid lg:grid-cols-2 gap-6">
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-6 space-y-4">
@@ -318,8 +387,6 @@ const AdminEmailTemplates = () => {
               </CardContent>
             </Card>
           </div>
-
-          {/* Preview */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-heading text-sm font-semibold">Preview</h3>
@@ -344,29 +411,12 @@ const AdminEmailTemplates = () => {
                 </button>
               </div>
             </div>
-            <Card className={cn(
-              "overflow-hidden",
-              previewMode === "mobile" && "max-w-[375px] mx-auto"
-            )}>
+            <Card className={cn("overflow-hidden", previewMode === "mobile" && "max-w-[375px] mx-auto")}>
               <div className="bg-secondary/30 px-4 py-2 border-b border-border">
                 <p className="text-xs font-body text-muted-foreground">Subject: {editData.subject}</p>
               </div>
               <CardContent className="p-0">
-                <div
-                  className="p-4"
-                  dangerouslySetInnerHTML={{
-                    __html: editData.body
-                      .replace(/\{\{customer_name\}\}/g, "Sarah Johnson")
-                      .replace(/\{\{order_id\}\}/g, "1042")
-                      .replace(/\{\{order_total\}\}/g, "₦85,000")
-                      .replace(/\{\{order_date\}\}/g, "Feb 27, 2026")
-                      .replace(/\{\{tracking_number\}\}/g, "NG12345678")
-                      .replace(/\{\{carrier\}\}/g, "DHL Express")
-                      .replace(/\{\{delivery_date\}\}/g, "Mar 3, 2026")
-                      .replace(/\{\{cart_total\}\}/g, "₦45,000")
-                      .replace(/\{\{cart_items\}\}/g, "Royal Blue Agbada × 1, Gold Kaftan × 1")
-                  }}
-                />
+                <div className="p-4" dangerouslySetInnerHTML={{ __html: previewHtml }} />
               </CardContent>
             </Card>
           </div>
