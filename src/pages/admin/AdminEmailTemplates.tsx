@@ -253,6 +253,15 @@ const AdminEmailTemplates = () => {
     toast({ title: "HTML copied to clipboard" });
   };
 
+  const isCustomTemplate = (id: string) => !defaultTemplates.some((t) => t.id === id);
+
+  const deleteTemplate = (id: string) => {
+    const updated = templates.filter((t) => t.id !== id);
+    setTemplates(updated);
+    localStorage.setItem("admin_email_templates", JSON.stringify(updated));
+    toast({ title: "Template deleted" });
+  };
+
   // Editor view
   if (editing && editData) {
     return (
@@ -513,6 +522,32 @@ const AdminEmailTemplates = () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                  {isCustomTemplate(template.id) && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                          <Trash2 size={13} />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="font-heading">Delete template?</AlertDialogTitle>
+                          <AlertDialogDescription className="font-body">
+                            This will permanently delete "{template.name}". This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="font-body">Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteTemplate(template.id)}
+                            className="font-body bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                   <Button variant="outline" size="sm" onClick={() => startEdit(template)} className="font-body text-xs h-8">
                     <Edit3 size={12} className="mr-1" /> Edit
                   </Button>
