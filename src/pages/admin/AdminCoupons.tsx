@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Trash2, Edit2, X, Copy, Percent, Tag } from "lucide-react";
+import { Plus, Trash2, Edit2, X, Copy, Percent, Tag, CalendarIcon } from "lucide-react";
+import { format, parse } from "date-fns";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
 
 interface Coupon {
@@ -142,7 +146,29 @@ const AdminCoupons = () => {
               </div>
               <div className="space-y-1.5">
                 <Label className="font-body text-xs uppercase text-muted-foreground">Expiry Date</Label>
-                <Input type="date" value={form.expiry} onChange={e => setForm(f => ({ ...f, expiry: e.target.value }))} className="h-10 bg-card border-border font-body" />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full h-10 justify-start text-left font-normal bg-card border-border font-body",
+                        !form.expiry && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {form.expiry ? format(parse(form.expiry, "yyyy-MM-dd", new Date()), "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={form.expiry ? parse(form.expiry, "yyyy-MM-dd", new Date()) : undefined}
+                      onSelect={(date) => setForm(f => ({ ...f, expiry: date ? format(date, "yyyy-MM-dd") : "" }))}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
             <div className="flex gap-3 mt-6">
