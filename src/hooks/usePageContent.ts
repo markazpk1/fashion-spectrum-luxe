@@ -155,3 +155,34 @@ export function isSectionEnabled(sections: SectionMeta[], id: string): boolean {
   const section = sections.find(s => s.id === id);
   return section ? section.enabled : true;
 }
+
+export interface CatalogPageContent {
+  title: string;
+  subtitle: string;
+  bannerImage: string;
+  metaDescription: string;
+  ogImage: string;
+  announcementText: string;
+  announcementEnabled: boolean;
+  footerNewsletterTitle: string;
+  footerNewsletterSubtitle: string;
+  footerCtaText: string;
+  footerCopyright: string;
+}
+
+export function useCatalogPageContent(pageKey: string): CatalogPageContent | null {
+  const [content, setContent] = useState<CatalogPageContent | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(`page_content_${pageKey}`);
+    if (saved) {
+      try {
+        setContent(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse catalog page content", e);
+      }
+    }
+  }, [pageKey]);
+
+  return content;
+}

@@ -7,20 +7,39 @@ import ProductCard from "./ProductCard";
 import AnnouncementBar from "./AnnouncementBar";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import type { CatalogPageContent } from "@/hooks/usePageContent";
 
 interface CatalogPageProps {
   title: string;
   subtitle?: string;
   products: Product[];
   bannerImage?: string;
+  cmsContent?: CatalogPageContent | null;
 }
 
 type SortOption = "featured" | "price-low" | "price-high" | "name-az" | "name-za";
 
-const CatalogPage = ({ title, subtitle, products, bannerImage }: CatalogPageProps) => {
+const CatalogPage = ({ title, subtitle, products, bannerImage, cmsContent }: CatalogPageProps) => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [sortBy, setSortBy] = useState<SortOption>("featured");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Use CMS content if available, otherwise fall back to props
+  const displayTitle = cmsContent?.title || title;
+  const displaySubtitle = cmsContent?.subtitle || subtitle;
+  const displayBanner = cmsContent?.bannerImage || bannerImage;
+
+  const announcementContent = cmsContent ? {
+    text: cmsContent.announcementText,
+    enabled: cmsContent.announcementEnabled,
+  } : undefined;
+
+  const footerContent = cmsContent ? {
+    newsletterTitle: cmsContent.footerNewsletterTitle,
+    newsletterSubtitle: cmsContent.footerNewsletterSubtitle,
+    ctaText: cmsContent.footerCtaText,
+    copyright: cmsContent.footerCopyright,
+  } : undefined;
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(products.map((p) => p.category)));
@@ -40,27 +59,27 @@ const CatalogPage = ({ title, subtitle, products, bannerImage }: CatalogPageProp
 
   return (
     <div className="min-h-screen bg-background pb-mobile-nav">
-      <AnnouncementBar />
+      <AnnouncementBar content={announcementContent} />
       <Navbar />
 
       {/* Banner */}
-      {bannerImage ? (
+      {displayBanner ? (
         <div className="relative h-[25vh] sm:h-[30vh] md:h-[40vh] overflow-hidden">
-          <img src={bannerImage} alt={title} className="absolute inset-0 w-full h-full object-cover" />
+          <img src={displayBanner} alt={displayTitle} className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-charcoal/40" />
           <div className="relative h-full flex items-center justify-center text-center px-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <h1 className="font-heading text-4xl md:text-6xl text-primary-foreground font-light">{title}</h1>
-              {subtitle && <p className="font-body text-sm text-primary-foreground/70 mt-3 tracking-wide">{subtitle}</p>}
+              <h1 className="font-heading text-4xl md:text-6xl text-primary-foreground font-light">{displayTitle}</h1>
+              {displaySubtitle && <p className="font-body text-sm text-primary-foreground/70 mt-3 tracking-wide">{displaySubtitle}</p>}
             </motion.div>
           </div>
         </div>
       ) : (
         <div className="py-12 md:py-16 px-6 md:px-16 text-center border-b border-border">
           <motion.h1 initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="font-heading text-4xl md:text-6xl text-foreground font-light">
-            {title}
+            {displayTitle}
           </motion.h1>
-          {subtitle && <p className="font-body text-sm text-muted-foreground mt-3 tracking-wide">{subtitle}</p>}
+          {displaySubtitle && <p className="font-body text-sm text-muted-foreground mt-3 tracking-wide">{displaySubtitle}</p>}
         </div>
       )}
 
@@ -69,7 +88,7 @@ const CatalogPage = ({ title, subtitle, products, bannerImage }: CatalogPageProp
         <div className="flex items-center gap-2 font-body text-[10px] tracking-[0.15em] uppercase text-muted-foreground">
           <Link to="/" className="hover:text-primary transition-colors">Home</Link>
           <span>/</span>
-          <span className="text-foreground">{title}</span>
+          <span className="text-foreground">{displayTitle}</span>
         </div>
       </div>
 
@@ -142,7 +161,7 @@ const CatalogPage = ({ title, subtitle, products, bannerImage }: CatalogPageProp
         </div>
       </div>
 
-      <Footer />
+      <Footer content={footerContent} />
     </div>
   );
 };
