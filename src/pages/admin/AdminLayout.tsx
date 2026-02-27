@@ -25,6 +25,7 @@ const navItems = [
   { label: "Pages", icon: FileText, path: "/admin/pages" },
   { label: "Media", icon: Image, path: "/admin/media" },
   { label: "Messages", icon: MessageSquare, path: "/admin/messages" },
+  { label: "Notifications", icon: Bell, path: "/admin/notifications" },
   { label: "Settings", icon: Settings, path: "/admin/settings" },
 ];
 
