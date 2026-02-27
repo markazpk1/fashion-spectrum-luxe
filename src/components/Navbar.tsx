@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Search, ShoppingBag, Menu, X } from "lucide-react";
+import { Heart, Search, ShoppingBag, Menu, X, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
@@ -54,6 +54,13 @@ const Navbar = () => {
             >
               <Search size={20} />
             </button>
+            <Link
+              to="/login"
+              className="text-foreground hover:text-primary transition-colors"
+              aria-label="Account"
+            >
+              <User size={20} />
+            </Link>
             <Link
               to="/wishlist"
               className="relative text-foreground hover:text-primary transition-colors"
