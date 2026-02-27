@@ -541,7 +541,6 @@ const UserDashboard = () => {
           </main>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };
