@@ -502,14 +502,14 @@ const AdminEmailTemplates = () => {
       </div>
 
       {/* Category Filter */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
         {(["all", "transactional", "marketing", "system"] as const).map((cat) => (
           <Button
             key={cat}
             variant="outline"
             size="sm"
             className={cn(
-              "font-body text-xs capitalize",
+              "font-body text-xs capitalize shrink-0 h-8",
               categoryFilter === cat && "border-primary bg-primary/5 text-primary"
             )}
             onClick={() => setCategoryFilter(cat)}
@@ -519,64 +519,28 @@ const AdminEmailTemplates = () => {
         ))}
       </div>
 
-      {/* Template Grid */}
-      <div className="grid md:grid-cols-2 gap-4">
+      {/* Template List */}
+      <div className="grid md:grid-cols-2 gap-3">
         {filtered.map((template) => (
           <Card key={template.id} className={cn("transition-all", !template.active && "opacity-60")}>
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="font-heading text-base flex items-center gap-2">
-                    {template.name}
-                    <Badge variant="outline" className={cn("text-[10px] font-body capitalize", categoryColors[template.category])}>
-                      {template.category}
-                    </Badge>
-                  </CardTitle>
-                  <CardDescription className="font-body text-xs">
-                    {template.description}
-                  </CardDescription>
+            <div className="p-3 sm:p-4">
+              {/* Top row: name + badge + actions */}
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h3 className="font-heading text-sm font-semibold truncate">{template.name}</h3>
+                  <Badge variant="outline" className={cn("text-[10px] font-body capitalize shrink-0", categoryColors[template.category])}>
+                    {template.category}
+                  </Badge>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="bg-secondary/30 rounded-lg p-3">
-                <p className="text-xs font-body text-muted-foreground mb-1">Subject:</p>
-                <p className="text-sm font-body text-foreground">{template.subject}</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-body text-muted-foreground">
-                  Edited {template.lastEdited}
-                </span>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 shrink-0">
                   <Button variant="ghost" size="sm" onClick={() => copyHtml(template.body)} className="h-8 w-8 p-0">
-                    <Copy size={13} />
+                    <Copy size={14} />
                   </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <Undo2 size={13} />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="font-heading">Reset template?</AlertDialogTitle>
-                        <AlertDialogDescription className="font-body">
-                          This will reset "{template.name}" to its default content. Your customizations will be lost.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className="font-body">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => resetTemplate(template.id)} className="font-body">
-                          Reset
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  {isCustomTemplate(template.id) && (
+                  {isCustomTemplate(template.id) ? (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive">
-                          <Trash2 size={13} />
+                          <Trash2 size={14} />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -597,13 +561,45 @@ const AdminEmailTemplates = () => {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                  ) : (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Undo2 size={14} />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="font-heading">Reset template?</AlertDialogTitle>
+                          <AlertDialogDescription className="font-body">
+                            This will reset "{template.name}" to its default content.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="font-body">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => resetTemplate(template.id)} className="font-body">
+                            Reset
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
-                  <Button variant="outline" size="sm" onClick={() => startEdit(template)} className="font-body text-xs h-8">
-                    <Edit3 size={12} className="mr-1" /> Edit
-                  </Button>
                 </div>
               </div>
-            </CardContent>
+
+              {/* Subject line */}
+              <p className="text-xs font-body text-muted-foreground truncate mb-2">{template.subject}</p>
+
+              {/* Bottom row: timestamp + edit */}
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-body text-muted-foreground">
+                  Edited {template.lastEdited}
+                </span>
+                <Button variant="outline" size="sm" onClick={() => startEdit(template)} className="font-body text-xs h-7 px-3">
+                  <Edit3 size={12} className="mr-1" /> Edit
+                </Button>
+              </div>
+            </div>
           </Card>
         ))}
       </div>
