@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import {
   Mail, Eye, Copy, Edit3, Check, Undo2, Palette, Code2, Smartphone, Plus, Trash2,
-  Type, AlignLeft, MousePointerClick, Image, Minus, GripVertical, ArrowUp, ArrowDown, ChevronDown
+  Type, AlignLeft, MousePointerClick, Image, Minus, GripVertical, ArrowUp, ArrowDown, ChevronDown,
+  Columns2, Crown, Share2, Instagram, Facebook, Twitter
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,7 @@ interface EmailTemplate {
   active: boolean;
 }
 
-type BlockType = "heading" | "text" | "button" | "image" | "divider" | "spacer";
+type BlockType = "heading" | "text" | "button" | "image" | "divider" | "spacer" | "two-column" | "logo-header" | "social-links";
 
 interface EmailBlock {
   id: string;
@@ -47,6 +48,11 @@ interface EmailBlock {
   align?: "left" | "center" | "right";
   color?: string;
   bgColor?: string;
+  leftContent?: string;
+  rightContent?: string;
+  socialLinks?: { platform: string; url: string }[];
+  logoUrl?: string;
+  brandName?: string;
 }
 
 const defaultTemplates: EmailTemplate[] = [
@@ -227,6 +233,40 @@ const blocksToHtml = (blocks: EmailBlock[]): string => {
         return `  <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />`;
       case "spacer":
         return `  <div style="height: 24px;"></div>`;
+      case "logo-header":
+        return `  <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #eee; margin-bottom: 20px;">
+    ${block.logoUrl ? `<img src="${block.logoUrl}" alt="${block.brandName || "Logo"}" style="max-height: 60px; margin-bottom: 8px;" />` : ""}
+    <h2 style="color: #1a1a1a; font-size: 20px; margin: 0; letter-spacing: 2px; text-transform: uppercase;">${block.brandName || "Brand Name"}</h2>
+    ${block.content ? `<p style="color: #999; font-size: 12px; margin: 4px 0 0;">${block.content}</p>` : ""}
+  </div>`;
+      case "two-column":
+        return `  <div style="display: flex; gap: 16px; margin: 12px 0;">
+    <div style="flex: 1; background: #f9f9f9; padding: 16px; border-radius: 8px;">
+      <p style="color: #555; margin: 0; line-height: 1.6;">${block.leftContent || "Left column content"}</p>
+    </div>
+    <div style="flex: 1; background: #f9f9f9; padding: 16px; border-radius: 8px;">
+      <p style="color: #555; margin: 0; line-height: 1.6;">${block.rightContent || "Right column content"}</p>
+    </div>
+  </div>`;
+      case "social-links": {
+        const links = block.socialLinks || [
+          { platform: "instagram", url: "#" },
+          { platform: "facebook", url: "#" },
+          { platform: "twitter", url: "#" },
+        ];
+        const iconMap: Record<string, string> = {
+          instagram: "📷",
+          facebook: "📘",
+          twitter: "🐦",
+        };
+        const linksHtml = links
+          .map((l) => `<a href="${l.url}" style="display: inline-block; margin: 0 8px; color: #555; text-decoration: none; font-size: 14px;">${iconMap[l.platform] || "🔗"} ${l.platform.charAt(0).toUpperCase() + l.platform.slice(1)}</a>`)
+          .join("\n      ");
+        return `  <div style="text-align: center; padding: 16px 0; border-top: 1px solid #eee; margin-top: 20px;">
+    <p style="color: #999; font-size: 12px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 1px;">Follow Us</p>
+    <div>${linksHtml}</div>
+  </div>`;
+      }
       default:
         return "";
     }
@@ -241,6 +281,9 @@ const blockTypeConfig: { type: BlockType; icon: React.ReactNode; label: string }
   { type: "button", icon: <MousePointerClick size={14} />, label: "Button" },
   { type: "image", icon: <Image size={14} />, label: "Image" },
   { type: "divider", icon: <Minus size={14} />, label: "Divider" },
+  { type: "logo-header", icon: <Crown size={14} />, label: "Logo Header" },
+  { type: "two-column", icon: <Columns2 size={14} />, label: "Two Column" },
+  { type: "social-links", icon: <Share2 size={14} />, label: "Social Links" },
 ];
 
 // --- Block Editor Component ---
@@ -251,8 +294,11 @@ const BlockEditor = ({ blocks, onChange }: { blocks: EmailBlock[]; onChange: (bl
     const newBlock: EmailBlock = {
       id: `b-${Date.now()}`,
       type,
-      content: type === "heading" ? "New Heading" : type === "text" ? "Your text here..." : type === "button" ? "Click Here" : type === "divider" ? "" : "",
+      content: type === "heading" ? "New Heading" : type === "text" ? "Your text here..." : type === "button" ? "Click Here" : type === "logo-header" ? "Your tagline here" : type === "divider" || type === "spacer" || type === "two-column" || type === "social-links" ? "" : "",
       url: type === "button" ? "#" : type === "image" ? "https://via.placeholder.com/600x200" : undefined,
+      ...(type === "logo-header" && { brandName: "Fashion Spectrum", logoUrl: "" }),
+      ...(type === "two-column" && { leftContent: "Left column content goes here.", rightContent: "Right column content goes here." }),
+      ...(type === "social-links" && { socialLinks: [{ platform: "instagram", url: "#" }, { platform: "facebook", url: "#" }, { platform: "twitter", url: "#" }] }),
     };
     onChange([...blocks, newBlock]);
     setSelectedBlock(newBlock.id);
@@ -334,7 +380,9 @@ const BlockEditor = ({ blocks, onChange }: { blocks: EmailBlock[]; onChange: (bl
 
             {/* Block preview (collapsed) */}
             {selectedBlock !== block.id && block.type !== "divider" && block.type !== "spacer" && (
-              <p className="text-xs text-foreground/70 truncate font-body">{block.content}</p>
+              <p className="text-xs text-foreground/70 truncate font-body">
+                {block.type === "logo-header" ? (block.brandName || "Logo Header") : block.type === "two-column" ? "Two Column Layout" : block.type === "social-links" ? `${(block.socialLinks || []).length} social links` : block.content}
+              </p>
             )}
 
             {/* Block editing (expanded) */}
@@ -407,6 +455,116 @@ const BlockEditor = ({ blocks, onChange }: { blocks: EmailBlock[]; onChange: (bl
                 )}
                 {(block.type === "divider" || block.type === "spacer") && (
                   <p className="text-[11px] text-muted-foreground font-body">No settings for this block</p>
+                )}
+                {block.type === "logo-header" && (
+                  <>
+                    <div>
+                      <Label className="text-[11px] font-body text-muted-foreground">Brand Name</Label>
+                      <Input
+                        value={block.brandName || ""}
+                        onChange={(e) => updateBlock(block.id, { brandName: e.target.value })}
+                        className="mt-1 h-8 text-sm font-body"
+                        placeholder="Your Brand"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[11px] font-body text-muted-foreground">Logo URL (optional)</Label>
+                      <Input
+                        value={block.logoUrl || ""}
+                        onChange={(e) => updateBlock(block.id, { logoUrl: e.target.value })}
+                        className="mt-1 h-8 text-sm font-body"
+                        placeholder="https://example.com/logo.png"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[11px] font-body text-muted-foreground">Tagline (optional)</Label>
+                      <Input
+                        value={block.content}
+                        onChange={(e) => updateBlock(block.id, { content: e.target.value })}
+                        className="mt-1 h-8 text-sm font-body"
+                        placeholder="Your tagline here"
+                      />
+                    </div>
+                  </>
+                )}
+                {block.type === "two-column" && (
+                  <>
+                    <div>
+                      <Label className="text-[11px] font-body text-muted-foreground">Left Column</Label>
+                      <Textarea
+                        value={block.leftContent || ""}
+                        onChange={(e) => updateBlock(block.id, { leftContent: e.target.value })}
+                        className="mt-1 text-sm font-body min-h-[50px]"
+                        placeholder="Left column content..."
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[11px] font-body text-muted-foreground">Right Column</Label>
+                      <Textarea
+                        value={block.rightContent || ""}
+                        onChange={(e) => updateBlock(block.id, { rightContent: e.target.value })}
+                        className="mt-1 text-sm font-body min-h-[50px]"
+                        placeholder="Right column content..."
+                      />
+                    </div>
+                  </>
+                )}
+                {block.type === "social-links" && (
+                  <div className="space-y-2">
+                    {(block.socialLinks || []).map((link, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <Select
+                          value={link.platform}
+                          onValueChange={(v) => {
+                            const updated = [...(block.socialLinks || [])];
+                            updated[i] = { ...updated[i], platform: v };
+                            updateBlock(block.id, { socialLinks: updated });
+                          }}
+                        >
+                          <SelectTrigger className="h-8 text-xs font-body w-28">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="instagram" className="text-xs">Instagram</SelectItem>
+                            <SelectItem value="facebook" className="text-xs">Facebook</SelectItem>
+                            <SelectItem value="twitter" className="text-xs">Twitter</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          value={link.url}
+                          onChange={(e) => {
+                            const updated = [...(block.socialLinks || [])];
+                            updated[i] = { ...updated[i], url: e.target.value };
+                            updateBlock(block.id, { socialLinks: updated });
+                          }}
+                          className="h-8 text-xs font-body flex-1"
+                          placeholder="https://..."
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-destructive"
+                          onClick={() => {
+                            const updated = (block.socialLinks || []).filter((_, j) => j !== i);
+                            updateBlock(block.id, { socialLinks: updated });
+                          }}
+                        >
+                          <Trash2 size={10} />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs font-body w-full"
+                      onClick={() => {
+                        const updated = [...(block.socialLinks || []), { platform: "instagram", url: "#" }];
+                        updateBlock(block.id, { socialLinks: updated });
+                      }}
+                    >
+                      <Plus size={12} className="mr-1" /> Add Link
+                    </Button>
+                  </div>
                 )}
               </div>
             )}
