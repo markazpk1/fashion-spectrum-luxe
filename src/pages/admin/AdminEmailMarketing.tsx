@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Megaphone, Send, Users, BarChart3, Plus, Calendar, Clock,
-  Mail, Trash2, Eye, Copy, Pause, Play, Edit3, Target, TrendingUp
+  Mail, Trash2, Eye, Copy, Pause, Play, Edit3, Target, TrendingUp, Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import EmailBuilder from "@/components/admin/EmailBuilder";
 
 type CampaignStatus = "draft" | "scheduled" | "sending" | "sent" | "paused";
 
@@ -137,6 +138,7 @@ const AdminEmailMarketing = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
   const [statusFilter, setStatusFilter] = useState<CampaignStatus | "all">("all");
   const [createOpen, setCreateOpen] = useState(false);
+  const [builderCampaignId, setBuilderCampaignId] = useState<string | null>(null);
   const [newCampaign, setNewCampaign] = useState({
     name: "",
     subject: "",
@@ -212,6 +214,21 @@ const AdminEmailMarketing = () => {
     setCampaigns((prev) => [dup, ...prev]);
     toast({ title: "Campaign duplicated" });
   };
+
+  // Show builder if a campaign is selected
+  const builderCampaign = campaigns.find((c) => c.id === builderCampaignId);
+  if (builderCampaign) {
+    return (
+      <EmailBuilder
+        campaignName={builderCampaign.name}
+        onBack={() => setBuilderCampaignId(null)}
+        onSave={(_blocks, _html) => {
+          toast({ title: `Content saved for "${builderCampaign.name}"` });
+          setBuilderCampaignId(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -440,6 +457,16 @@ const AdminEmailMarketing = () => {
 
                   {/* Actions */}
                   <div className="flex items-center gap-1 flex-shrink-0">
+                    {(campaign.status === "draft" || campaign.status === "scheduled") && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="font-body text-xs"
+                        onClick={() => setBuilderCampaignId(campaign.id)}
+                      >
+                        <Palette size={12} className="mr-1" /> Design
+                      </Button>
+                    )}
                     {campaign.status === "draft" && (
                       <Button
                         variant="outline"
