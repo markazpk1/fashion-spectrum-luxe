@@ -270,37 +270,158 @@ const WishlistTab = () => {
   );
 };
 
-const PaymentsTab = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h2 className="font-heading text-2xl font-semibold text-foreground">Payment Methods</h2>
-      <Button size="sm" className="font-body text-xs tracking-wider uppercase">
-        <Plus size={14} className="mr-1" /> Add Card
-      </Button>
-    </div>
+const PaymentsTab = () => {
+  const [showAddCard, setShowAddCard] = useState(false);
+  const [cards, setCards] = useState(mockPayments);
+  const [newCard, setNewCard] = useState({ name: "", number: "", expiry: "", cvv: "", type: "Visa" });
 
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {mockPayments.map(card => (
-        <div key={card.id} className={`bg-card border rounded-lg p-5 relative ${card.isDefault ? "border-primary" : "border-border"}`}>
-          {card.isDefault && (
-            <Badge className="absolute top-3 right-3 bg-primary/10 text-primary border-0 font-body text-[10px]">Default</Badge>
-          )}
-          <div className="flex items-center gap-3 mb-3">
-            <CreditCard size={24} className="text-primary" />
-            <div>
-              <p className="font-body text-sm font-medium text-foreground">{card.type} •••• {card.last4}</p>
-              <p className="font-body text-xs text-muted-foreground">Expires {card.expiry}</p>
+  const formatCardNumber = (val: string) => val.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
+  const formatExpiry = (val: string) => {
+    const digits = val.replace(/\D/g, "").slice(0, 4);
+    return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+  };
+
+  const detectCardType = (num: string) => {
+    const clean = num.replace(/\s/g, "");
+    if (clean.startsWith("4")) return "Visa";
+    if (clean.startsWith("5") || clean.startsWith("2")) return "Mastercard";
+    return "Card";
+  };
+
+  const handleAddCard = () => {
+    const clean = newCard.number.replace(/\s/g, "");
+    if (clean.length < 16 || newCard.expiry.length < 5 || newCard.cvv.length < 3 || !newCard.name.trim()) {
+      toast({ title: "Please fill all card details correctly", variant: "destructive" });
+      return;
+    }
+    const card = {
+      id: Date.now(),
+      type: detectCardType(newCard.number),
+      last4: clean.slice(-4),
+      expiry: newCard.expiry,
+      isDefault: cards.length === 0,
+    };
+    setCards([...cards, card]);
+    setNewCard({ name: "", number: "", expiry: "", cvv: "", type: "Visa" });
+    setShowAddCard(false);
+    toast({ title: "Card added successfully!" });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-heading text-2xl font-semibold text-foreground">Payment Methods</h2>
+        <Button size="sm" className="font-body text-xs tracking-wider uppercase" onClick={() => setShowAddCard(true)}>
+          <Plus size={14} className="mr-1" /> Add Card
+        </Button>
+      </div>
+
+      {/* Add Card Dialog */}
+      {showAddCard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/60" onClick={() => setShowAddCard(false)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative z-50 bg-background border border-border rounded-lg shadow-xl w-full max-w-md mx-4 p-6"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-heading text-lg font-semibold text-foreground">Add New Card</h3>
+              <button onClick={() => setShowAddCard(false)} className="text-muted-foreground hover:text-foreground">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="font-body text-xs uppercase text-muted-foreground">Cardholder Name</Label>
+                <Input
+                  placeholder="Name on card"
+                  value={newCard.name}
+                  onChange={e => setNewCard(c => ({ ...c, name: e.target.value }))}
+                  className="h-10 bg-card border-border font-body"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="font-body text-xs uppercase text-muted-foreground">Card Number</Label>
+                <div className="relative">
+                  <Input
+                    placeholder="0000 0000 0000 0000"
+                    value={newCard.number}
+                    onChange={e => {
+                      const formatted = formatCardNumber(e.target.value);
+                      setNewCard(c => ({ ...c, number: formatted, type: detectCardType(formatted) }));
+                    }}
+                    className="h-10 bg-card border-border font-body pr-16"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-body text-muted-foreground">
+                    {detectCardType(newCard.number)}
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="font-body text-xs uppercase text-muted-foreground">Expiry Date</Label>
+                  <Input
+                    placeholder="MM/YY"
+                    value={newCard.expiry}
+                    onChange={e => setNewCard(c => ({ ...c, expiry: formatExpiry(e.target.value) }))}
+                    className="h-10 bg-card border-border font-body"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="font-body text-xs uppercase text-muted-foreground">CVV</Label>
+                  <Input
+                    placeholder="•••"
+                    value={newCard.cvv}
+                    onChange={e => setNewCard(c => ({ ...c, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
+                    className="h-10 bg-card border-border font-body"
+                    type="password"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button variant="outline" className="flex-1 font-body text-xs tracking-wider uppercase" onClick={() => setShowAddCard(false)}>
+                Cancel
+              </Button>
+              <Button className="flex-1 font-body text-xs tracking-wider uppercase" onClick={handleAddCard}>
+                Add Card
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {cards.map(card => (
+          <div key={card.id} className={`bg-card border rounded-lg p-5 relative ${card.isDefault ? "border-primary" : "border-border"}`}>
+            {card.isDefault && (
+              <Badge className="absolute top-3 right-3 bg-primary/10 text-primary border-0 font-body text-[10px]">Default</Badge>
+            )}
+            <div className="flex items-center gap-3 mb-3">
+              <CreditCard size={24} className="text-primary" />
+              <div>
+                <p className="font-body text-sm font-medium text-foreground">{card.type} •••• {card.last4}</p>
+                <p className="font-body text-xs text-muted-foreground">Expires {card.expiry}</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <Button variant="outline" size="sm" className="font-body text-xs"><Edit2 size={12} className="mr-1" /> Edit</Button>
+              {!card.isDefault && (
+                <Button variant="ghost" size="sm" className="font-body text-xs text-destructive" onClick={() => setCards(cards.filter(c => c.id !== card.id))}>
+                  <Trash2 size={12} className="mr-1" /> Remove
+                </Button>
+              )}
             </div>
           </div>
-          <div className="flex gap-2 mt-3">
-            <Button variant="outline" size="sm" className="font-body text-xs"><Edit2 size={12} className="mr-1" /> Edit</Button>
-            {!card.isDefault && <Button variant="ghost" size="sm" className="font-body text-xs text-destructive"><Trash2 size={12} className="mr-1" /> Remove</Button>}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const NotificationsTab = () => (
   <div className="space-y-6">
