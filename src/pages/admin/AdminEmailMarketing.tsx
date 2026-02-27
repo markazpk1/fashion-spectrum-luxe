@@ -1,7 +1,8 @@
 import { useState } from "react";
 import {
   Megaphone, Send, Users, BarChart3, Plus, Calendar, Clock,
-  Mail, Trash2, Eye, Copy, Pause, Play, Edit3, Target, TrendingUp, Palette
+  Mail, Trash2, Eye, Copy, Pause, Play, Edit3, Target, TrendingUp, Palette,
+  Newspaper, Rocket, Sparkles, LayoutTemplate
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -144,7 +145,9 @@ const AdminEmailMarketing = () => {
     subject: "",
     previewText: "",
     audience: "All Subscribers",
+    template: "blank",
   });
+  const [builderTemplate, setBuilderTemplate] = useState<string | null>(null);
   const { toast } = useToast();
 
   const filtered = statusFilter === "all"
@@ -176,9 +179,15 @@ const AdminEmailMarketing = () => {
       createdAt: "Just now",
     };
     setCampaigns((prev) => [campaign, ...prev]);
-    setNewCampaign({ name: "", subject: "", previewText: "", audience: "All Subscribers" });
+    const selectedTemplate = newCampaign.template;
+    setNewCampaign({ name: "", subject: "", previewText: "", audience: "All Subscribers", template: "blank" });
     setCreateOpen(false);
     toast({ title: "Campaign created as draft" });
+    // Auto-open builder with template if one was selected
+    if (selectedTemplate !== "blank") {
+      setBuilderCampaignId(campaign.id);
+      setBuilderTemplate(selectedTemplate);
+    }
   };
 
   const updateStatus = (id: string, status: CampaignStatus) => {
@@ -221,10 +230,12 @@ const AdminEmailMarketing = () => {
     return (
       <EmailBuilder
         campaignName={builderCampaign.name}
-        onBack={() => setBuilderCampaignId(null)}
+        presetTemplate={builderTemplate || undefined}
+        onBack={() => { setBuilderCampaignId(null); setBuilderTemplate(null); }}
         onSave={(_blocks, _html) => {
           toast({ title: `Content saved for "${builderCampaign.name}"` });
           setBuilderCampaignId(null);
+          setBuilderTemplate(null);
         }}
       />
     );
@@ -294,6 +305,31 @@ const AdminEmailMarketing = () => {
                     {audiences.map((a) => (
                       <SelectItem key={a} value={a} className="font-body">{a}</SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="font-body text-sm">Email Template</Label>
+                <Select value={newCampaign.template} onValueChange={(v) => setNewCampaign({ ...newCampaign, template: v })}>
+                  <SelectTrigger className="font-body mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="blank" className="font-body">
+                      <span className="flex items-center gap-2"><LayoutTemplate size={14} /> Blank Canvas</span>
+                    </SelectItem>
+                    <SelectItem value="promotional" className="font-body">
+                      <span className="flex items-center gap-2"><Megaphone size={14} /> Promotional Sale</span>
+                    </SelectItem>
+                    <SelectItem value="newsletter" className="font-body">
+                      <span className="flex items-center gap-2"><Newspaper size={14} /> Newsletter</span>
+                    </SelectItem>
+                    <SelectItem value="product-launch" className="font-body">
+                      <span className="flex items-center gap-2"><Rocket size={14} /> Product Launch</span>
+                    </SelectItem>
+                    <SelectItem value="welcome" className="font-body">
+                      <span className="flex items-center gap-2"><Sparkles size={14} /> Welcome Email</span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

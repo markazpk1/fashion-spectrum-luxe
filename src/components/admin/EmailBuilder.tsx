@@ -231,12 +231,22 @@ interface EmailBuilderProps {
   onBack: () => void;
   campaignName?: string;
   initialBlocks?: EmailBlock[];
+  presetTemplate?: string;
   onSave?: (blocks: EmailBlock[], html: string) => void;
 }
 
-const EmailBuilder = ({ onBack, campaignName = "Campaign", initialBlocks, onSave }: EmailBuilderProps) => {
-  const [blocks, setBlocksRaw] = useState<EmailBlock[]>(initialBlocks || starterBlocks);
-  const [history, setHistory] = useState<EmailBlock[][]>([initialBlocks || starterBlocks]);
+const EmailBuilder = ({ onBack, campaignName = "Campaign", initialBlocks, presetTemplate, onSave }: EmailBuilderProps) => {
+  const getInitialBlocks = (): EmailBlock[] => {
+    if (initialBlocks) return initialBlocks;
+    if (presetTemplate) {
+      const preset = templatePresets.find((p) => p.id === presetTemplate);
+      if (preset) return preset.blocks();
+    }
+    return starterBlocks;
+  };
+  const initial = getInitialBlocks();
+  const [blocks, setBlocksRaw] = useState<EmailBlock[]>(initial);
+  const [history, setHistory] = useState<EmailBlock[][]>([initial]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
