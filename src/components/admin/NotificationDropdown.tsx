@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Bell, Package, ShoppingCart, Users, AlertTriangle, Trash2, Volume2, VolumeX, BellRing } from "lucide-react";
 import {
   DropdownMenu,
@@ -82,6 +83,7 @@ const typeColors = {
 };
 
 const NotificationDropdown = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const saved = localStorage.getItem("admin_notification_sound");
@@ -342,7 +344,7 @@ const NotificationDropdown = () => {
         </div>
         <DropdownMenuSeparator className="m-0" />
         <div className="p-2">
-          <Button variant="ghost" size="sm" className="w-full font-body text-xs text-muted-foreground">
+          <Button variant="ghost" size="sm" className="w-full font-body text-xs text-muted-foreground" onClick={() => navigate("/admin/notifications")}>
             View all notifications
           </Button>
         </div>

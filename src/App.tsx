@@ -44,6 +44,7 @@ import AdminPageEditor from "./pages/admin/AdminPageEditor";
 import AdminMedia from "./pages/admin/AdminMedia";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 
 const queryClient = new QueryClient();
 
@@ -116,6 +117,7 @@ const AnimatedRoutes = () => {
             <Route path="pages/edit/:pageId" element={<AdminPageEditor />} />
             <Route path="media" element={<AdminMedia />} />
             <Route path="messages" element={<AdminMessages />} />
+            <Route path="notifications" element={<AdminNotifications />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 
