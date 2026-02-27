@@ -24,7 +24,7 @@ const CardBrandIcon = ({ type, size = 24 }: { type: string; size?: number }) => 
     return (
       <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect width="48" height="48" rx="6" fill="#1A1F71" />
-        <path d="M20.3 30.5l2.5-15h3l-2.5 15h-3zm12.5-15l-2.8 10.3-1.2-6-.4-2c-.2-.5-.7-.7-1.2-.7h-4.5l-.1.4c1.2.3 2.5.8 3.3 1.3l2.8 10.7h3.1l4.7-14h-3.7zm-16.6 0l-3.6 10.2-.4-2c-.7-2.3-2.8-4.8-5.2-6l2.7 12.8h3.2l4.8-15h-3.5zm-7.3 0H4l-.1.3c3.8 1 6.3 3.3 7.3 6.1l-1-5.3c-.2-.7-.7-1-1.3-1.1z" fill="hsl(var(--primary-foreground))" />
+        <path d="M20.3 30.5l2.5-15h3l-2.5 15h-3zm12.5-15l-2.8 10.3-1.2-6-.4-2c-.2-.5-.7-.7-1.2-.7h-4.5l-.1.4c1.2.3 2.5.8 3.3 1.3l2.8 10.7h3.1l4.7-14h-3.7zm-16.6 0l-3.6 10.2-.4-2c-.7-2.3-2.8-4.8-5.2-6l2.7 12.8h3.2l4.8-15h-3.5zm-7.3 0H4l-.1.3c3.8 1 6.3 3.3 7.3 6.1l-1-5.3c-.2-.7-.7-1-1.3-1.1z" fill="#FFFFFF" />
       </svg>
     );
   }
@@ -35,6 +35,50 @@ const CardBrandIcon = ({ type, size = 24 }: { type: string; size?: number }) => 
         <circle cx="20" cy="24" r="10" fill="#EB001B" />
         <circle cx="28" cy="24" r="10" fill="#F79E1B" />
         <path d="M24 16.7a10 10 0 0 1 0 14.6 10 10 0 0 1 0-14.6z" fill="#FF5F00" />
+      </svg>
+    );
+  }
+  if (type === "Amex") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="6" fill="#2E77BC" />
+        <text x="24" y="27" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="10" fill="#FFFFFF">AMEX</text>
+      </svg>
+    );
+  }
+  if (type === "Discover") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="6" fill="#FF6600" />
+        <circle cx="28" cy="24" r="8" fill="#FFFFFF" />
+        <text x="16" y="27" fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="7" fill="#FFFFFF">D</text>
+      </svg>
+    );
+  }
+  if (type === "Diners") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="6" fill="#0079BE" />
+        <circle cx="24" cy="24" r="9" fill="none" stroke="#FFFFFF" strokeWidth="2" />
+        <line x1="18" y1="24" x2="30" y2="24" stroke="#FFFFFF" strokeWidth="2" />
+        <line x1="24" y1="18" x2="24" y2="30" stroke="#FFFFFF" strokeWidth="2" />
+      </svg>
+    );
+  }
+  if (type === "JCB") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="6" fill="#0B7B3E" />
+        <text x="24" y="27" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="12" fill="#FFFFFF">JCB</text>
+      </svg>
+    );
+  }
+  if (type === "UnionPay") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="6" fill="#E21836" />
+        <rect x="16" y="14" width="16" height="20" rx="2" fill="#00447C" />
+        <text x="24" y="27" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="6" fill="#FFFFFF">UP</text>
       </svg>
     );
   }
@@ -308,6 +352,11 @@ const PaymentsTab = () => {
     const clean = num.replace(/\s/g, "");
     if (clean.startsWith("4")) return "Visa";
     if (clean.startsWith("5") || clean.startsWith("2")) return "Mastercard";
+    if (clean.startsWith("34") || clean.startsWith("37")) return "Amex";
+    if (clean.startsWith("6011") || clean.startsWith("65") || clean.startsWith("644")) return "Discover";
+    if (clean.startsWith("36") || clean.startsWith("38") || clean.startsWith("300")) return "Diners";
+    if (clean.startsWith("35")) return "JCB";
+    if (clean.startsWith("62")) return "UnionPay";
     return "Card";
   };
 
