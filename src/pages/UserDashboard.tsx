@@ -408,12 +408,20 @@ const PaymentsTab = () => {
                 <p className="font-body text-xs text-muted-foreground">Expires {card.expiry}</p>
               </div>
             </div>
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-2 mt-3 flex-wrap">
               <Button variant="outline" size="sm" className="font-body text-xs"><Edit2 size={12} className="mr-1" /> Edit</Button>
               {!card.isDefault && (
-                <Button variant="ghost" size="sm" className="font-body text-xs text-destructive" onClick={() => setCards(cards.filter(c => c.id !== card.id))}>
-                  <Trash2 size={12} className="mr-1" /> Remove
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" className="font-body text-xs text-primary" onClick={() => {
+                    setCards(cards.map(c => ({ ...c, isDefault: c.id === card.id })));
+                    toast({ title: `${card.type} •••• ${card.last4} set as default` });
+                  }}>
+                    <Check size={12} className="mr-1" /> Set as Default
+                  </Button>
+                  <Button variant="ghost" size="sm" className="font-body text-xs text-destructive" onClick={() => setCards(cards.filter(c => c.id !== card.id))}>
+                    <Trash2 size={12} className="mr-1" /> Remove
+                  </Button>
+                </>
               )}
             </div>
           </div>
