@@ -62,7 +62,7 @@ const AdminLayout = () => {
       <Separator />
 
       {/* Navigation */}
-      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto min-h-0">
+      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto min-h-0" data-lenis-prevent>
         {navItems.map(item => (
           <Link
             key={item.path}
