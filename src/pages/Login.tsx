@@ -21,7 +21,7 @@ const Login = () => {
       return;
     }
     toast({ title: "Login successful!", description: "Welcome back!" });
-    navigate("/");
+    navigate("/account");
   };
 
   return (
