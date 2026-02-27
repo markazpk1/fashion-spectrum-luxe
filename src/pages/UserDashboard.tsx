@@ -19,6 +19,28 @@ import Footer from "@/components/Footer";
 
 type TabKey = "profile" | "orders" | "addresses" | "wishlist" | "payments" | "notifications" | "security" | "settings";
 
+const CardBrandIcon = ({ type, size = 24 }: { type: string; size?: number }) => {
+  if (type === "Visa") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="6" fill="#1A1F71" />
+        <path d="M20.3 30.5l2.5-15h3l-2.5 15h-3zm12.5-15l-2.8 10.3-1.2-6-.4-2c-.2-.5-.7-.7-1.2-.7h-4.5l-.1.4c1.2.3 2.5.8 3.3 1.3l2.8 10.7h3.1l4.7-14h-3.7zm-16.6 0l-3.6 10.2-.4-2c-.7-2.3-2.8-4.8-5.2-6l2.7 12.8h3.2l4.8-15h-3.5zm-7.3 0H4l-.1.3c3.8 1 6.3 3.3 7.3 6.1l-1-5.3c-.2-.7-.7-1-1.3-1.1z" fill="hsl(var(--primary-foreground))" />
+      </svg>
+    );
+  }
+  if (type === "Mastercard") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="6" fill="#252525" />
+        <circle cx="20" cy="24" r="10" fill="#EB001B" />
+        <circle cx="28" cy="24" r="10" fill="#F79E1B" />
+        <path d="M24 16.7a10 10 0 0 1 0 14.6 10 10 0 0 1 0-14.6z" fill="#FF5F00" />
+      </svg>
+    );
+  }
+  return <CreditCard size={size} className="text-muted-foreground" />;
+};
+
 const sidebarItems: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "profile", label: "My Profile", icon: User },
   { key: "orders", label: "My Orders", icon: Package },
@@ -381,8 +403,8 @@ const PaymentsTab = () => {
                 }}
                 className="h-10 bg-card border-border font-body pr-16"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-body text-muted-foreground">
-                {detectCardType(cardState.number)}
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <CardBrandIcon type={detectCardType(cardState.number)} size={20} />
               </span>
             </div>
           </div>
@@ -461,7 +483,7 @@ const PaymentsTab = () => {
               <Badge className="absolute top-3 right-3 bg-primary/10 text-primary border-0 font-body text-[10px]">Default</Badge>
             )}
             <div className="flex items-center gap-3 mb-3">
-              <CreditCard size={24} className="text-primary" />
+              <CardBrandIcon type={card.type} size={28} />
               <div>
                 <p className="font-body text-sm font-medium text-foreground">{card.type} •••• {card.last4}</p>
                 <p className="font-body text-xs text-muted-foreground">Expires {card.expiry}</p>
