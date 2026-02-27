@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Mail, Eye, Copy, Edit3, Check, Undo2, Palette, Code2, Smartphone
+  Mail, Eye, Copy, Edit3, Check, Undo2, Palette, Code2, Smartphone, Plus, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,12 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -156,7 +162,44 @@ const AdminEmailTemplates = () => {
   const [editData, setEditData] = useState<EmailTemplate | null>(null);
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [categoryFilter, setCategoryFilter] = useState<"all" | "transactional" | "marketing" | "system">("all");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({
+    name: "",
+    subject: "",
+    description: "",
+    category: "transactional" as "transactional" | "marketing" | "system",
+  });
   const { toast } = useToast();
+
+  const createTemplate = () => {
+    if (!newTemplate.name || !newTemplate.subject) {
+      toast({ title: "Please fill in name and subject", variant: "destructive" });
+      return;
+    }
+    const template: EmailTemplate = {
+      id: `tpl-${Date.now()}`,
+      name: newTemplate.name,
+      subject: newTemplate.subject,
+      description: newTemplate.description || "Custom template",
+      category: newTemplate.category,
+      body: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #1a1a1a; font-size: 24px;">${newTemplate.name}</h1>
+  <p style="color: #555;">Hi {{customer_name}},</p>
+  <p style="color: #555;">Your email content goes here.</p>
+  <a href="#" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none;">Call to Action</a>
+  <p style="color: #999; font-size: 12px; margin-top: 30px;">Fashion Spectrum — Redefining African Fashion</p>
+</div>`,
+      lastEdited: "Just now",
+      active: true,
+    };
+    const updated = [template, ...templates];
+    setTemplates(updated);
+    localStorage.setItem("admin_email_templates", JSON.stringify(updated));
+    setNewTemplate({ name: "", subject: "", description: "", category: "transactional" });
+    setCreateOpen(false);
+    toast({ title: "Template created" });
+    startEdit(template);
+  };
 
   const filtered = categoryFilter === "all"
     ? templates
@@ -336,6 +379,67 @@ const AdminEmailTemplates = () => {
             Customize automated emails sent to your customers
           </p>
         </div>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button className="font-body">
+              <Plus size={16} className="mr-2" /> New Template
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="font-heading">Create Template</DialogTitle>
+              <DialogDescription className="font-body">
+                Set up a new email template. You can edit the HTML content after creation.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label className="font-body text-sm">Template Name</Label>
+                <Input
+                  value={newTemplate.name}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
+                  placeholder="e.g. Refund Confirmation"
+                  className="font-body mt-1.5"
+                />
+              </div>
+              <div>
+                <Label className="font-body text-sm">Subject Line</Label>
+                <Input
+                  value={newTemplate.subject}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, subject: e.target.value })}
+                  placeholder="e.g. Your refund has been processed"
+                  className="font-body mt-1.5"
+                />
+              </div>
+              <div>
+                <Label className="font-body text-sm">Description</Label>
+                <Input
+                  value={newTemplate.description}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, description: e.target.value })}
+                  placeholder="When is this template used?"
+                  className="font-body mt-1.5"
+                />
+              </div>
+              <div>
+                <Label className="font-body text-sm">Category</Label>
+                <Select value={newTemplate.category} onValueChange={(v: "transactional" | "marketing" | "system") => setNewTemplate({ ...newTemplate, category: v })}>
+                  <SelectTrigger className="font-body mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="transactional" className="font-body">Transactional</SelectItem>
+                    <SelectItem value="marketing" className="font-body">Marketing</SelectItem>
+                    <SelectItem value="system" className="font-body">System</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCreateOpen(false)} className="font-body">Cancel</Button>
+              <Button onClick={createTemplate} className="font-body">Create Template</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Category Filter */}
