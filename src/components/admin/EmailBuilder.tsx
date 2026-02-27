@@ -3,7 +3,8 @@ import {
   Type, Image, MousePointer2, Minus, Square, Columns2, List,
   GripVertical, Trash2, ChevronUp, ChevronDown, Copy, ArrowLeft,
   Eye, Code2, Smartphone, Monitor, Save, Undo2, Settings2,
-  AlignLeft, AlignCenter, AlignRight, Bold, Italic, Link2
+  AlignLeft, AlignCenter, AlignRight, Bold, Italic, Link2,
+  LayoutTemplate, Megaphone, Newspaper, Rocket, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,6 +127,104 @@ const starterBlocks: EmailBlock[] = [
   createBlock("button"),
 ];
 
+// ─── Template Presets ──────────────────────────────────────────
+
+interface TemplatePreset {
+  id: string;
+  name: string;
+  description: string;
+  icon: typeof Megaphone;
+  color: string;
+  blocks: () => EmailBlock[];
+}
+
+const uid = () => `block-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+const templatePresets: TemplatePreset[] = [
+  {
+    id: "promotional",
+    name: "Promotional Sale",
+    description: "Bold sale announcement with hero image and CTA",
+    icon: Megaphone,
+    color: "text-rose-500 bg-rose-500/10",
+    blocks: () => [
+      { id: uid(), type: "image", src: "https://placehold.co/600x280/1a1a1a/ffffff?text=SALE+UP+TO+50%25+OFF", alt: "Sale banner", width: 100, align: "center", borderRadius: 0 } as ImageBlock,
+      { id: uid(), type: "spacer", height: 16 } as SpacerBlock,
+      { id: uid(), type: "heading", content: "Exclusive Sale — Limited Time Only", level: "h1", align: "center", color: "#1a1a1a" } as HeadingBlock,
+      { id: uid(), type: "text", content: "Don't miss our biggest sale of the season. Get up to 50% off on our premium African-inspired collection. From elegant kaftans to regal agbadas — now is the time to elevate your wardrobe.", align: "center", color: "#555555", fontSize: 16 } as TextBlock,
+      { id: uid(), type: "divider", color: "#e0e0e0", thickness: 1, style: "solid" } as DividerBlock,
+      { id: uid(), type: "columns", columns: 2, content: ["🔥 <strong>Flash Deals</strong><br/>Selected items at 50% off. First come, first served.", "🎁 <strong>Free Shipping</strong><br/>On all orders over ₦50,000. No code needed."] } as ColumnsBlock,
+      { id: uid(), type: "spacer", height: 12 } as SpacerBlock,
+      { id: uid(), type: "button", text: "Shop the Sale →", url: "#", bgColor: "#c0392b", textColor: "#ffffff", align: "center", borderRadius: 8, fullWidth: false } as ButtonBlock,
+      { id: uid(), type: "spacer", height: 16 } as SpacerBlock,
+      { id: uid(), type: "text", content: "Offer valid until March 15, 2026. Cannot be combined with other promotions.", align: "center", color: "#999999", fontSize: 12 } as TextBlock,
+    ],
+  },
+  {
+    id: "newsletter",
+    name: "Newsletter",
+    description: "Clean weekly newsletter with multiple content sections",
+    icon: Newspaper,
+    color: "text-blue-500 bg-blue-500/10",
+    blocks: () => [
+      { id: uid(), type: "heading", content: "Weekly Style Update", level: "h2", align: "center", color: "#1a1a1a" } as HeadingBlock,
+      { id: uid(), type: "text", content: "Your weekly dose of fashion inspiration, styling tips, and behind-the-scenes updates from our atelier.", align: "center", color: "#777777", fontSize: 14 } as TextBlock,
+      { id: uid(), type: "divider", color: "#e0e0e0", thickness: 1, style: "solid" } as DividerBlock,
+      { id: uid(), type: "heading", content: "Editor's Pick of the Week", level: "h3", align: "left", color: "#1a1a1a" } as HeadingBlock,
+      { id: uid(), type: "image", src: "https://placehold.co/600x300/f5f0eb/333?text=Featured+Look", alt: "Featured look", width: 100, align: "center", borderRadius: 8 } as ImageBlock,
+      { id: uid(), type: "text", content: "This week we're spotlighting the Royal Blue Senator — a timeless piece that combines traditional elegance with modern tailoring. Perfect for special occasions and evening events.", align: "left", color: "#555555", fontSize: 15 } as TextBlock,
+      { id: uid(), type: "button", text: "Read More", url: "#", bgColor: "#2980b9", textColor: "#ffffff", align: "left", borderRadius: 6, fullWidth: false } as ButtonBlock,
+      { id: uid(), type: "spacer", height: 20 } as SpacerBlock,
+      { id: uid(), type: "heading", content: "Style Tips", level: "h3", align: "left", color: "#1a1a1a" } as HeadingBlock,
+      { id: uid(), type: "list", items: ["How to accessorize your agbada for weddings", "5 ways to style a kaftan for casual outings", "Fabric care guide: keeping your pieces pristine"], style: "bullet", color: "#555555" } as ListBlock,
+      { id: uid(), type: "divider", color: "#e0e0e0", thickness: 1, style: "dashed" } as DividerBlock,
+      { id: uid(), type: "text", content: "Thanks for reading! Follow us on Instagram @yourbrand for daily inspiration.", align: "center", color: "#999999", fontSize: 13 } as TextBlock,
+    ],
+  },
+  {
+    id: "product-launch",
+    name: "Product Launch",
+    description: "Announce a new product with features and imagery",
+    icon: Rocket,
+    color: "text-violet-500 bg-violet-500/10",
+    blocks: () => [
+      { id: uid(), type: "text", content: "JUST DROPPED", align: "center", color: "#8e44ad", fontSize: 13 } as TextBlock,
+      { id: uid(), type: "heading", content: "Introducing the Heritage Collection", level: "h1", align: "center", color: "#1a1a1a" } as HeadingBlock,
+      { id: uid(), type: "text", content: "A celebration of African craftsmanship meeting contemporary design. Each piece tells a story of heritage, tradition, and modern expression.", align: "center", color: "#555555", fontSize: 16 } as TextBlock,
+      { id: uid(), type: "image", src: "https://placehold.co/600x400/2c2c2c/ffffff?text=Heritage+Collection", alt: "Heritage Collection", width: 100, align: "center", borderRadius: 12 } as ImageBlock,
+      { id: uid(), type: "spacer", height: 16 } as SpacerBlock,
+      { id: uid(), type: "columns", columns: 3, content: ["✂️ <strong>Hand-Tailored</strong><br/>Crafted by master artisans", "🧵 <strong>Premium Fabric</strong><br/>100% premium cotton blend", "📦 <strong>Gift Ready</strong><br/>Luxury packaging included"] } as ColumnsBlock,
+      { id: uid(), type: "spacer", height: 16 } as SpacerBlock,
+      { id: uid(), type: "heading", content: "Available in 6 Styles", level: "h3", align: "center", color: "#1a1a1a" } as HeadingBlock,
+      { id: uid(), type: "columns", columns: 2, content: ["<strong>Classic Agbada</strong> — ₦85,000<br/><strong>Royal Kaftan</strong> — ₦65,000<br/><strong>Senator Suit</strong> — ₦55,000", "<strong>Grand Boubou</strong> — ₦95,000<br/><strong>Dashiki Deluxe</strong> — ₦45,000<br/><strong>Aso Oke Set</strong> — ₦120,000"] } as ColumnsBlock,
+      { id: uid(), type: "spacer", height: 12 } as SpacerBlock,
+      { id: uid(), type: "button", text: "Explore the Collection", url: "#", bgColor: "#8e44ad", textColor: "#ffffff", align: "center", borderRadius: 8, fullWidth: false } as ButtonBlock,
+      { id: uid(), type: "spacer", height: 8 } as SpacerBlock,
+      { id: uid(), type: "text", content: "Pre-orders ship by March 10. Free returns within 30 days.", align: "center", color: "#999999", fontSize: 12 } as TextBlock,
+    ],
+  },
+  {
+    id: "welcome",
+    name: "Welcome Email",
+    description: "Warm onboarding email for new subscribers",
+    icon: Sparkles,
+    color: "text-amber-500 bg-amber-500/10",
+    blocks: () => [
+      { id: uid(), type: "heading", content: "Welcome to the Family! 🎉", level: "h1", align: "center", color: "#1a1a1a" } as HeadingBlock,
+      { id: uid(), type: "text", content: "Thank you for joining us! We're thrilled to have you as part of our community. Get ready for exclusive access to new collections, special offers, and styling inspiration delivered straight to your inbox.", align: "center", color: "#555555", fontSize: 16 } as TextBlock,
+      { id: uid(), type: "divider", color: "#e0e0e0", thickness: 1, style: "solid" } as DividerBlock,
+      { id: uid(), type: "heading", content: "Here's What You Get", level: "h2", align: "center", color: "#1a1a1a" } as HeadingBlock,
+      { id: uid(), type: "list", items: ["10% off your first order — use code WELCOME10", "Early access to new drops & limited editions", "Exclusive member-only sales and events", "Styling tips and fashion guides"], style: "bullet", color: "#555555" } as ListBlock,
+      { id: uid(), type: "spacer", height: 12 } as SpacerBlock,
+      { id: uid(), type: "button", text: "Start Shopping — 10% Off", url: "#", bgColor: "#27ae60", textColor: "#ffffff", align: "center", borderRadius: 8, fullWidth: false } as ButtonBlock,
+      { id: uid(), type: "spacer", height: 20 } as SpacerBlock,
+      { id: uid(), type: "image", src: "https://placehold.co/600x250/f9f5f0/333?text=Best+Sellers", alt: "Best sellers", width: 100, align: "center", borderRadius: 8 } as ImageBlock,
+      { id: uid(), type: "text", content: "Check out our most popular pieces — loved by thousands of customers.", align: "center", color: "#555555", fontSize: 14 } as TextBlock,
+      { id: uid(), type: "button", text: "View Best Sellers", url: "#", bgColor: "#1a1a1a", textColor: "#ffffff", align: "center", borderRadius: 6, fullWidth: false } as ButtonBlock,
+    ],
+  },
+];
+
 // ─── Main Component ─────────────────────────────────────────────
 
 interface EmailBuilderProps {
@@ -146,6 +245,12 @@ const EmailBuilder = ({ onBack, campaignName = "Campaign", initialBlocks, onSave
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const selectedBlock = blocks.find((b) => b.id === selectedId) || null;
+
+  // ─── Load template preset ──────────────────────────────────
+  const loadTemplate = useCallback((preset: TemplatePreset) => {
+    setBlocks(preset.blocks());
+    setSelectedId(null);
+  }, []);
 
   // ─── Block operations ──────────────────────────────────────
 
@@ -639,7 +744,28 @@ ${blocks.map(renderBlock).join("\n")}
 
       <div className="grid grid-cols-[220px_1fr_260px] gap-4 min-h-[70vh]">
         {/* Toolbox */}
-        <div className="bg-card rounded-xl border border-border p-3 space-y-1 h-fit sticky top-20">
+        <div className="bg-card rounded-xl border border-border p-3 space-y-1 h-fit sticky top-20 max-h-[80vh] overflow-y-auto">
+          <p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">Templates</p>
+          {templatePresets.map((preset) => {
+            const Icon = preset.icon;
+            return (
+              <div
+                key={preset.id}
+                onClick={() => loadTemplate(preset)}
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer hover:bg-secondary/70 transition-colors group"
+              >
+                <div className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0", preset.color)}>
+                  <Icon size={14} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-body font-medium text-foreground">{preset.name}</p>
+                  <p className="text-[10px] font-body text-muted-foreground leading-tight truncate">{preset.description}</p>
+                </div>
+              </div>
+            );
+          })}
+
+          <Separator className="my-2" />
           <p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">Blocks</p>
           {toolboxItems.map((item) => {
             const Icon = item.icon;
