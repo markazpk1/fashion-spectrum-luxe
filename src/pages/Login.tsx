@@ -14,14 +14,24 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
+  const fillDemo = () => {
+    setEmail("demo@fashionspectrum.com");
+    setPassword("demo1234");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast({ title: "Please fill in all fields", variant: "destructive" });
       return;
     }
-    toast({ title: "Login successful!", description: "Welcome back!" });
-    navigate("/account");
+    if (email === "demo@fashionspectrum.com" && password === "demo1234") {
+      localStorage.setItem("fs-user", JSON.stringify({ name: "Ahmed Khan", email }));
+      toast({ title: "Login successful!", description: "Welcome back, Ahmed!" });
+      navigate("/account");
+    } else {
+      toast({ title: "Invalid credentials", description: "Try the demo account below", variant: "destructive" });
+    }
   };
 
   return (
@@ -72,6 +82,14 @@ const Login = () => {
               Sign In
             </Button>
           </form>
+
+          <div className="bg-secondary/50 border border-border rounded-lg p-4 text-center">
+            <p className="font-body text-xs text-muted-foreground mb-2">Demo Account</p>
+            <p className="font-body text-xs text-foreground">demo@fashionspectrum.com / demo1234</p>
+            <Button variant="outline" size="sm" className="mt-2 font-body text-xs" onClick={fillDemo}>
+              Fill Demo Credentials
+            </Button>
+          </div>
 
           <p className="text-center text-sm text-muted-foreground font-body">
             Don't have an account?{" "}
