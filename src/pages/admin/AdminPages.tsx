@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FileText, Edit2, Eye, Plus, Trash2, Globe, GlobeLock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ const today = () => {
 };
 
 const AdminPages = () => {
+  const navigate = useNavigate();
   const [pages, setPages] = useState<PageItem[]>(initialPages);
   const [editPage, setEditPage] = useState<PageItem | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -131,7 +133,7 @@ const AdminPages = () => {
                     <a href={p.path} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground">
                       <Eye size={14} />
                     </a>
-                    <button onClick={() => setEditPage({ ...p })} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground">
+                    <button onClick={() => navigate(`/admin/pages/edit/${p.path === "/" ? "home" : p.path.replace(/^\//, "")}`)} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground">
                       <Edit2 size={14} />
                     </button>
                     <button onClick={() => setDeleteId(p.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive">

@@ -40,6 +40,7 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminInventory from "./pages/admin/AdminInventory";
 import AdminPages from "./pages/admin/AdminPages";
+import AdminPageEditor from "./pages/admin/AdminPageEditor";
 import AdminMedia from "./pages/admin/AdminMedia";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminSettings from "./pages/admin/AdminSettings";
@@ -112,6 +113,7 @@ const AnimatedRoutes = () => {
             <Route path="categories" element={<AdminCategories />} />
             <Route path="inventory" element={<AdminInventory />} />
             <Route path="pages" element={<AdminPages />} />
+            <Route path="pages/edit/:pageId" element={<AdminPageEditor />} />
             <Route path="media" element={<AdminMedia />} />
             <Route path="messages" element={<AdminMessages />} />
             <Route path="settings" element={<AdminSettings />} />
