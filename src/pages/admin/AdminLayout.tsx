@@ -5,6 +5,7 @@ import {
   Settings, BarChart3, ChevronLeft, ChevronRight, LogOut, Bell,
   Search, Menu, X, FileText, Truck, MessageSquare, Image, Percent
 } from "lucide-react";
+import NotificationDropdown from "@/components/admin/NotificationDropdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -138,10 +139,7 @@ const AdminLayout = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button className="relative text-muted-foreground hover:text-foreground">
-                <Bell size={18} />
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center font-body">3</span>
-              </button>
+              <NotificationDropdown />
               <Separator orientation="vertical" className="h-6" />
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-heading text-sm font-semibold">
