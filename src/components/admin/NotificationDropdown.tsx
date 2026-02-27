@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Bell, Package, ShoppingCart, Users, AlertTriangle, Check, Trash2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Bell, Package, ShoppingCart, Users, AlertTriangle, Trash2, Volume2, VolumeX, BellRing } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,6 +8,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  playNotificationSound,
+  requestNotificationPermission,
+  showBrowserNotification,
+} from "@/lib/notificationSound";
+import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
   id: string;
@@ -77,8 +83,64 @@ const typeColors = {
 
 const NotificationDropdown = () => {
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem("admin_notification_sound");
+    return saved !== "false";
+  });
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const { toast } = useToast();
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  // Check browser notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "granted") {
+      setPushEnabled(true);
+    }
+  }, []);
+
+  // Persist sound preference
+  useEffect(() => {
+    localStorage.setItem("admin_notification_sound", String(soundEnabled));
+  }, [soundEnabled]);
+
+  // Simulate incoming critical notification (demo every 30s)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const criticalAlerts = [
+        { title: "Payment Failed", message: "Order #1050 payment was declined", type: "alert" as const },
+        { title: "Refund Requested", message: "Customer requested refund for Order #1048", type: "alert" as const },
+        { title: "Critical Stock", message: "Gold Kaftan is out of stock", type: "inventory" as const },
+      ];
+
+      const randomAlert = criticalAlerts[Math.floor(Math.random() * criticalAlerts.length)];
+      const newNotification: Notification = {
+        id: `live-${Date.now()}`,
+        title: randomAlert.title,
+        message: randomAlert.message,
+        time: "Just now",
+        read: false,
+        type: randomAlert.type,
+      };
+
+      setNotifications((prev) => [newNotification, ...prev]);
+
+      // Play sound for critical alerts
+      if (soundEnabled) {
+        playNotificationSound(randomAlert.type === "alert" ? "critical" : "info");
+      }
+
+      // Show browser notification
+      if (pushEnabled) {
+        showBrowserNotification(
+          `⚠️ ${randomAlert.title}`,
+          randomAlert.message
+        );
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [soundEnabled, pushEnabled]);
 
   const markAsRead = (id: string) => {
     setNotifications((prev) =>
@@ -94,23 +156,106 @@ const NotificationDropdown = () => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
+  const toggleSound = useCallback(() => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    if (next) {
+      playNotificationSound("info");
+      toast({ title: "Notification sounds enabled" });
+    } else {
+      toast({ title: "Notification sounds muted" });
+    }
+  }, [soundEnabled, toast]);
+
+  const togglePush = useCallback(async () => {
+    if (pushEnabled) {
+      setPushEnabled(false);
+      toast({ title: "Browser notifications disabled" });
+      return;
+    }
+    const permission = await requestNotificationPermission();
+    if (permission === "granted") {
+      setPushEnabled(true);
+      toast({ title: "Browser notifications enabled" });
+      showBrowserNotification("Notifications Active", "You'll receive alerts for critical events.");
+    } else {
+      toast({
+        title: "Permission denied",
+        description: "Please allow notifications in your browser settings.",
+        variant: "destructive",
+      });
+    }
+  }, [pushEnabled, toast]);
+
+  const testCriticalAlert = useCallback(() => {
+    const testNotif: Notification = {
+      id: `test-${Date.now()}`,
+      title: "Payment Failed",
+      message: "Test alert — Order #9999 payment was declined",
+      time: "Just now",
+      read: false,
+      type: "alert",
+    };
+    setNotifications((prev) => [testNotif, ...prev]);
+
+    if (soundEnabled) {
+      playNotificationSound("critical");
+    }
+    if (pushEnabled) {
+      showBrowserNotification("⚠️ Payment Failed", testNotif.message);
+    }
+  }, [soundEnabled, pushEnabled]);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="relative text-muted-foreground hover:text-foreground transition-colors">
-          <Bell size={18} />
+          <Bell size={18} className={cn(unreadCount > 0 && "animate-pulse")} />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center font-body">
-              {unreadCount}
+              {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3">
           <h3 className="font-heading text-sm font-semibold text-foreground">
             Notifications
           </h3>
+          <div className="flex items-center gap-1">
+            {/* Sound toggle */}
+            <button
+              onClick={toggleSound}
+              className={cn(
+                "p-1.5 rounded-md transition-colors",
+                soundEnabled
+                  ? "text-primary hover:bg-primary/10"
+                  : "text-muted-foreground hover:bg-secondary"
+              )}
+              title={soundEnabled ? "Mute sounds" : "Enable sounds"}
+            >
+              {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+            </button>
+            {/* Push toggle */}
+            <button
+              onClick={togglePush}
+              className={cn(
+                "p-1.5 rounded-md transition-colors",
+                pushEnabled
+                  ? "text-primary hover:bg-primary/10"
+                  : "text-muted-foreground hover:bg-secondary"
+              )}
+              title={pushEnabled ? "Disable browser notifications" : "Enable browser notifications"}
+            >
+              <BellRing size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div className="flex items-center justify-between px-4 pb-2">
           {unreadCount > 0 && (
             <button
               onClick={markAllRead}
@@ -119,8 +264,17 @@ const NotificationDropdown = () => {
               Mark all read
             </button>
           )}
+          <button
+            onClick={testCriticalAlert}
+            className="text-xs font-body text-muted-foreground hover:text-foreground ml-auto"
+          >
+            Test alert
+          </button>
         </div>
+
         <DropdownMenuSeparator className="m-0" />
+
+        {/* Notification list */}
         <div className="max-h-80 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="py-8 text-center">
