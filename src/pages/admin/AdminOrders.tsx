@@ -101,6 +101,12 @@ const AdminOrders = () => {
     toast({ title: `Order ${id} marked as ${newStatus}` });
   };
 
+  const bulkUpdateStatus = (newStatus: string) => {
+    setOrders(orders.map(o => selectedRows.has(o.id) ? { ...o, status: newStatus } : o));
+    toast({ title: `${selectedRows.size} orders marked as ${newStatus}` });
+    setSelectedRows(new Set());
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -110,9 +116,21 @@ const AdminOrders = () => {
         </div>
         <div className="flex gap-2">
           {selectedRows.size > 0 && (
-            <Button variant="outline" className="font-body text-xs tracking-wider uppercase" onClick={() => exportCSV(filtered.filter(o => selectedRows.has(o.id)))}>
-              <Download size={14} className="mr-1" /> Export Selected ({selectedRows.size})
-            </Button>
+            <>
+              <Button variant="outline" className="font-body text-xs tracking-wider uppercase" onClick={() => exportCSV(filtered.filter(o => selectedRows.has(o.id)))}>
+                <Download size={14} className="mr-1" /> Export ({selectedRows.size})
+              </Button>
+              <select
+                onChange={e => { if (e.target.value) { bulkUpdateStatus(e.target.value); e.target.value = ""; } }}
+                defaultValue=""
+                className="h-9 px-3 rounded-md border border-border bg-card font-body text-xs tracking-wider uppercase text-foreground cursor-pointer"
+              >
+                <option value="" disabled>Bulk Status...</option>
+                {["Processing", "Shipped", "Delivered", "Cancelled", "Refunded"].map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </>
           )}
           <Button variant="outline" className="font-body text-xs tracking-wider uppercase" onClick={() => exportCSV(filtered)}>
             <Download size={14} className="mr-1" /> Export All
