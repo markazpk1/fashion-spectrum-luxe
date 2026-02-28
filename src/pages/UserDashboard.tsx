@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   User, Package, MapPin, Heart, CreditCard, Bell, Settings, LogOut,
   ChevronRight, Edit2, Camera, Shield, Gift, Clock, Star, Truck, 
-  Check, X, Plus, Trash2, Eye, EyeOff, Mail, Phone
+  Check, X, Plus, Trash2, Eye, EyeOff, Mail, Phone, Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -167,13 +167,55 @@ const sidebarItems: { key: TabKey; label: string; icon: React.ElementType }[] = 
   { key: "settings", label: "Settings", icon: Settings },
 ];
 
+// Mock order item details
+import product1 from "@/assets/product-1.jpg";
+import product2 from "@/assets/product-2.jpg";
+import product3 from "@/assets/product-3.jpg";
+import product5 from "@/assets/product-5.jpg";
+import product7 from "@/assets/product-7.jpg";
+import product9 from "@/assets/product-9.jpg";
+import product11 from "@/assets/product-11.jpg";
+
+interface OrderItem {
+  name: string;
+  image: string;
+  size: string;
+  qty: number;
+  price: number;
+  color?: string;
+}
+
+interface UserOrder {
+  id: string;
+  date: string;
+  status: string;
+  total: number;
+  items: number;
+  orderItems: OrderItem[];
+}
+
 // Mock data
-const mockOrders = [
-  { id: "FS-20240101", date: "Jan 15, 2025", status: "Delivered", total: 12500, items: 3, image: "/placeholder.svg" },
-  { id: "FS-20240098", date: "Jan 8, 2025", status: "In Transit", total: 8900, items: 2, image: "/placeholder.svg" },
-  { id: "FS-20240085", date: "Dec 28, 2024", status: "Processing", total: 15200, items: 1, image: "/placeholder.svg" },
-  { id: "FS-20240070", date: "Dec 15, 2024", status: "Delivered", total: 6500, items: 4, image: "/placeholder.svg" },
-  { id: "FS-20240055", date: "Nov 30, 2024", status: "Cancelled", total: 3200, items: 1, image: "/placeholder.svg" },
+const mockOrders: UserOrder[] = [
+  { id: "FS-20240101", date: "Jan 15, 2025", status: "Delivered", total: 12500, items: 3, orderItems: [
+    { name: "Emerald Empress Medium Kaftan", image: product1, size: "M", qty: 1, price: 4500, color: "Emerald" },
+    { name: "Aegean Nights Co-Ord Set", image: product2, size: "L", qty: 1, price: 5200, color: "Navy" },
+    { name: "Royal Heritage Kaftan", image: product3, size: "S", qty: 1, price: 2600, color: "Gold" },
+  ]},
+  { id: "FS-20240098", date: "Jan 8, 2025", status: "In Transit", total: 8900, items: 2, orderItems: [
+    { name: "Sunset Bloom Kaftan", image: product5, size: "XL", qty: 1, price: 4900, color: "Rose" },
+    { name: "Pearl Essence Tunic", image: product7, size: "M", qty: 1, price: 3800, color: "Ivory" },
+  ]},
+  { id: "FS-20240085", date: "Dec 28, 2024", status: "Processing", total: 15200, items: 1, orderItems: [
+    { name: "Diamond Luxe Bridal Kaftan", image: product9, size: "L", qty: 1, price: 15000, color: "White" },
+  ]},
+  { id: "FS-20240070", date: "Dec 15, 2024", status: "Delivered", total: 6500, items: 4, orderItems: [
+    { name: "Classic Noir Abaya", image: product11, size: "M", qty: 2, price: 1800, color: "Black" },
+    { name: "Sapphire Wave Kaftan", image: product1, size: "S", qty: 1, price: 1500, color: "Blue" },
+    { name: "Crimson Royale Set", image: product3, size: "L", qty: 1, price: 1200, color: "Red" },
+  ]},
+  { id: "FS-20240055", date: "Nov 30, 2024", status: "Cancelled", total: 3200, items: 1, orderItems: [
+    { name: "Moonlight Silk Kaftan", image: product5, size: "XS", qty: 1, price: 3000, color: "Silver" },
+  ]},
 ];
 
 const mockAddresses = [
@@ -289,11 +331,16 @@ const ProfileTab = () => {
 
 const OrdersTab = () => {
   const [statusFilter, setStatusFilter] = useState("All");
-  const [selectedOrder, setSelectedOrder] = useState<typeof mockOrders[0] | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<UserOrder | null>(null);
   const [orders, setOrders] = useState(mockOrders);
 
   const statuses = ["All", "Delivered", "In Transit", "Processing", "Cancelled"];
-  const filtered = statusFilter === "All" ? orders : orders.filter(o => o.status === statusFilter);
+  const filtered = orders.filter(o => {
+    const matchStatus = statusFilter === "All" || o.status === statusFilter;
+    const matchSearch = !searchQuery || o.id.toLowerCase().includes(searchQuery.toLowerCase()) || o.orderItems.some(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchStatus && matchSearch;
+  });
 
   const getProgress = (status: string) => {
     if (status === "Processing") return 25;
@@ -397,6 +444,17 @@ const OrdersTab = () => {
       <div className="flex items-center justify-between">
         <h2 className="font-heading text-2xl font-semibold text-foreground">My Orders</h2>
         <p className="text-sm text-muted-foreground font-body">{orders.length} orders</p>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search by order ID or product name..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="pl-9 h-10 bg-card border-border font-body"
+        />
       </div>
 
       {/* Status Filters */}
@@ -518,10 +576,30 @@ const OrdersTab = () => {
 
             <Separator className="my-4" />
 
-            {/* Order Details */}
+            {/* Order Items Breakdown */}
             <div className="space-y-3">
+              <h4 className="font-body text-sm font-medium text-foreground">Order Items</h4>
+              {selectedOrder.orderItems.map((item, idx) => (
+                <div key={idx} className="flex gap-3 p-2 rounded-lg bg-secondary/30">
+                  <img src={item.image} alt={item.name} className="w-16 h-16 rounded-md object-cover flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-body text-sm font-medium text-foreground truncate">{item.name}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {item.color && <span className="font-body text-[11px] text-muted-foreground">{item.color}</span>}
+                      <span className="font-body text-[11px] text-muted-foreground">· Size: {item.size}</span>
+                      <span className="font-body text-[11px] text-muted-foreground">· Qty: {item.qty}</span>
+                    </div>
+                    <p className="font-body text-sm font-semibold text-foreground mt-1">₨ {item.price.toLocaleString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Separator className="my-4" />
+
+            {/* Price Summary */}
+            <div className="space-y-2">
               {[
-                ["Items", `${selectedOrder.items} items`],
                 ["Subtotal", `₨ ${(selectedOrder.total - 200).toLocaleString()}`],
                 ["Shipping", "₨ 200"],
                 ["Total", `₨ ${selectedOrder.total.toLocaleString()}`],
