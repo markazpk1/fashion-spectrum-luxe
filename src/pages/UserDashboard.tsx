@@ -309,15 +309,87 @@ const OrdersTab = () => {
   };
 
   const handleDownloadInvoice = (order: typeof mockOrders[0]) => {
-    const invoice = `INVOICE\n\nOrder: ${order.id}\nDate: ${order.date}\nItems: ${order.items}\nTotal: Rs ${order.total.toLocaleString()}\nStatus: ${order.status}`;
-    const blob = new Blob([invoice], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `invoice-${order.id}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: "Invoice downloaded" });
+    import("jspdf").then(({ jsPDF }) => {
+      const doc = new jsPDF();
+      const pw = doc.internal.pageSize.getWidth();
+
+      // Header bar
+      doc.setFillColor(139, 69, 19);
+      doc.rect(0, 0, pw, 40, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.text("FASHION SPECTRUM", 20, 22);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("Premium Kaftans & Fashion", 20, 30);
+
+      // Invoice title & order info
+      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("INVOICE", 20, 58);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Invoice #: ${order.id}`, pw - 20, 52, { align: "right" });
+      doc.text(`Date: ${order.date}`, pw - 20, 58, { align: "right" });
+      doc.text(`Status: ${order.status}`, pw - 20, 64, { align: "right" });
+
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, 72, pw - 20, 72);
+
+      // Bill to
+      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Bill To:", 20, 82);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(80, 80, 80);
+      doc.text("Ahmed Khan", 20, 89);
+      doc.text("ahmed.khan@example.com", 20, 95);
+      doc.text("Karachi, Sindh, Pakistan", 20, 101);
+
+      // Table
+      const ty = 115;
+      doc.setFillColor(245, 245, 245);
+      doc.rect(20, ty, pw - 40, 10, "F");
+      doc.setTextColor(80, 80, 80);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text("Description", 25, ty + 7);
+      doc.text("Qty", 120, ty + 7);
+      doc.text("Amount", pw - 25, ty + 7, { align: "right" });
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(50, 50, 50);
+      const ry = ty + 18;
+      doc.text(`Order Items (${order.items} items)`, 25, ry);
+      doc.text(`${order.items}`, 120, ry);
+      doc.text(`Rs ${(order.total - 200).toLocaleString()}`, pw - 25, ry, { align: "right" });
+      doc.text("Shipping", 25, ry + 10);
+      doc.text("1", 120, ry + 10);
+      doc.text("Rs 200", pw - 25, ry + 10, { align: "right" });
+
+      doc.line(20, ry + 18, pw - 20, ry + 18);
+
+      // Total
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("Total:", 120, ry + 28);
+      doc.text(`Rs ${order.total.toLocaleString()}`, pw - 25, ry + 28, { align: "right" });
+
+      // Footer
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(150, 150, 150);
+      doc.text("Thank you for shopping with Fashion Spectrum!", pw / 2, 270, { align: "center" });
+      doc.text("www.fashionspectrum.com | support@fashionspectrum.com", pw / 2, 276, { align: "center" });
+
+      doc.save(`invoice-${order.id}.pdf`);
+      toast({ title: "Invoice PDF downloaded" });
+    });
   };
 
   return (
