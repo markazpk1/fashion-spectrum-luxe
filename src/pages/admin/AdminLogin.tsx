@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Lock, Eye, EyeOff, Shield } from "lucide-react";
+import { Lock, Eye, EyeOff, Shield, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,10 @@ import { toast } from "@/hooks/use-toast";
 
 const ADMIN_PASSWORD = "admin123";
 
+const ADMIN_EMAIL = "admin@fashionspectrum.com";
+
 const AdminLogin = () => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,11 +22,11 @@ const AdminLogin = () => {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
-      if (password === ADMIN_PASSWORD) {
+      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
         sessionStorage.setItem("admin_auth", "true");
         navigate("/admin");
       } else {
-        toast({ title: "Invalid password", variant: "destructive" });
+        toast({ title: "Invalid credentials", variant: "destructive" });
       }
       setLoading(false);
     }, 500);
@@ -45,6 +48,20 @@ const AdminLogin = () => {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="font-body text-xs uppercase tracking-wider text-muted-foreground">Email</Label>
+            <div className="relative">
+              <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="Enter admin email"
+                className="pl-9 h-11 bg-card border-border font-body"
+              />
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <Label className="font-body text-xs uppercase tracking-wider text-muted-foreground">Password</Label>
             <div className="relative">
@@ -68,7 +85,7 @@ const AdminLogin = () => {
         </form>
 
         <p className="text-center text-xs text-muted-foreground font-body mt-6">
-          Demo password: <span className="text-primary font-medium">admin123</span>
+          Demo: <span className="text-primary font-medium">admin@fashionspectrum.com</span> / <span className="text-primary font-medium">admin123</span>
         </p>
       </motion.div>
     </div>
