@@ -398,34 +398,54 @@ const OrdersTab = () => {
       doc.text("ahmed.khan@example.com", 20, 95);
       doc.text("Karachi, Sindh, Pakistan", 20, 101);
 
-      // Table
+      // Table header
       const ty = 115;
       doc.setFillColor(245, 245, 245);
       doc.rect(20, ty, pw - 40, 10, "F");
       doc.setTextColor(80, 80, 80);
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
-      doc.text("Description", 25, ty + 7);
-      doc.text("Qty", 120, ty + 7);
-      doc.text("Amount", pw - 25, ty + 7, { align: "right" });
+      doc.text("Product", 25, ty + 7);
+      doc.text("Size", 105, ty + 7);
+      doc.text("Qty", 125, ty + 7);
+      doc.text("Price", pw - 25, ty + 7, { align: "right" });
 
+      // Product line items
       doc.setFont("helvetica", "normal");
       doc.setTextColor(50, 50, 50);
-      const ry = ty + 18;
-      doc.text(`Order Items (${order.items} items)`, 25, ry);
-      doc.text(`${order.items}`, 120, ry);
-      doc.text(`Rs ${(order.total - 200).toLocaleString()}`, pw - 25, ry, { align: "right" });
-      doc.text("Shipping", 25, ry + 10);
-      doc.text("1", 120, ry + 10);
-      doc.text("Rs 200", pw - 25, ry + 10, { align: "right" });
+      let currentY = ty + 18;
+      order.orderItems.forEach((item) => {
+        doc.setFontSize(9);
+        doc.text(item.name, 25, currentY);
+        doc.text(item.size, 105, currentY);
+        doc.text(`${item.qty}`, 125, currentY);
+        doc.text(`Rs ${item.price.toLocaleString()}`, pw - 25, currentY, { align: "right" });
+        if (item.color) {
+          doc.setFontSize(7);
+          doc.setTextColor(120, 120, 120);
+          doc.text(`Color: ${item.color}`, 25, currentY + 5);
+          doc.setTextColor(50, 50, 50);
+          currentY += 12;
+        } else {
+          currentY += 8;
+        }
+      });
 
-      doc.line(20, ry + 18, pw - 20, ry + 18);
+      // Shipping row
+      doc.setFontSize(9);
+      doc.text("Shipping", 25, currentY);
+      doc.text("Rs 200", pw - 25, currentY, { align: "right" });
+      currentY += 8;
+
+      // Divider
+      doc.line(20, currentY, pw - 20, currentY);
+      currentY += 10;
 
       // Total
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
-      doc.text("Total:", 120, ry + 28);
-      doc.text(`Rs ${order.total.toLocaleString()}`, pw - 25, ry + 28, { align: "right" });
+      doc.text("Total:", 105, currentY);
+      doc.text(`Rs ${order.total.toLocaleString()}`, pw - 25, currentY, { align: "right" });
 
       // Footer
       doc.setFontSize(8);
