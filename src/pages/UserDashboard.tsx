@@ -287,50 +287,216 @@ const ProfileTab = () => {
   );
 };
 
-const OrdersTab = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h2 className="font-heading text-2xl font-semibold text-foreground">My Orders</h2>
-      <p className="text-sm text-muted-foreground font-body">{mockOrders.length} orders</p>
-    </div>
+const OrdersTab = () => {
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [selectedOrder, setSelectedOrder] = useState<typeof mockOrders[0] | null>(null);
+  const [orders, setOrders] = useState(mockOrders);
 
-    <div className="space-y-3">
-      {mockOrders.map(order => (
-        <div key={order.id} className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-md bg-secondary flex items-center justify-center">
-                <Package size={24} className="text-muted-foreground" />
-              </div>
-              <div>
-                <p className="font-body text-sm font-medium text-foreground">{order.id}</p>
-                <p className="text-xs text-muted-foreground font-body">{order.date} · {order.items} items</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className={`text-xs px-2.5 py-1 rounded-full font-body font-medium ${statusColor[order.status]}`}>
-                {order.status}
-              </span>
-              <p className="font-body text-sm font-semibold text-foreground">₨ {order.total.toLocaleString()}</p>
-              <ChevronRight size={16} className="text-muted-foreground" />
-            </div>
-          </div>
-          {order.status === "In Transit" && (
-            <div className="mt-3 pt-3 border-t border-border">
-              <div className="flex items-center gap-2">
-                <Truck size={14} className="text-primary" />
-                <span className="text-xs font-body text-muted-foreground">Estimated delivery: Jan 12, 2025</span>
-              </div>
-              <div className="mt-2 h-1.5 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full w-2/3 transition-all" />
-              </div>
-            </div>
-          )}
+  const statuses = ["All", "Delivered", "In Transit", "Processing", "Cancelled"];
+  const filtered = statusFilter === "All" ? orders : orders.filter(o => o.status === statusFilter);
+
+  const getProgress = (status: string) => {
+    if (status === "Processing") return 25;
+    if (status === "In Transit") return 65;
+    if (status === "Delivered") return 100;
+    return 0;
+  };
+
+  const handleCancel = (id: string) => {
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "Cancelled" } : o));
+    setSelectedOrder(null);
+    toast({ title: `Order ${id} has been cancelled` });
+  };
+
+  const handleDownloadInvoice = (order: typeof mockOrders[0]) => {
+    const invoice = `INVOICE\n\nOrder: ${order.id}\nDate: ${order.date}\nItems: ${order.items}\nTotal: Rs ${order.total.toLocaleString()}\nStatus: ${order.status}`;
+    const blob = new Blob([invoice], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `invoice-${order.id}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Invoice downloaded" });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-heading text-2xl font-semibold text-foreground">My Orders</h2>
+        <p className="text-sm text-muted-foreground font-body">{orders.length} orders</p>
+      </div>
+
+      {/* Status Filters */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+        {statuses.map(s => (
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s)}
+            className={`px-3 py-1.5 rounded-full font-body text-xs whitespace-nowrap transition-all ${
+              statusFilter === s ? "bg-primary text-primary-foreground" : "bg-card border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {s} {s !== "All" && `(${orders.filter(o => o.status === s).length})`}
+          </button>
+        ))}
+      </div>
+
+      {/* Orders List */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-16">
+          <Package size={48} className="mx-auto text-muted-foreground/30 mb-4" />
+          <p className="font-heading text-xl text-muted-foreground">No orders found</p>
+          <p className="text-sm text-muted-foreground font-body mt-1">No orders match this filter</p>
         </div>
-      ))}
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(order => (
+            <div
+              key={order.id}
+              onClick={() => setSelectedOrder(order)}
+              className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+            >
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-md bg-secondary flex items-center justify-center">
+                    <Package size={24} className="text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-body text-sm font-medium text-foreground">{order.id}</p>
+                    <p className="text-xs text-muted-foreground font-body">{order.date} · {order.items} items</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-body font-medium ${statusColor[order.status]}`}>
+                    {order.status}
+                  </span>
+                  <p className="font-body text-sm font-semibold text-foreground">₨ {order.total.toLocaleString()}</p>
+                  <ChevronRight size={16} className="text-muted-foreground" />
+                </div>
+              </div>
+              {order.status === "In Transit" && (
+                <div className="mt-3 pt-3 border-t border-border">
+                  <div className="flex items-center gap-2">
+                    <Truck size={14} className="text-primary" />
+                    <span className="text-xs font-body text-muted-foreground">Estimated delivery: Jan 12, 2025</span>
+                  </div>
+                  <div className="mt-2 h-1.5 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full w-2/3 transition-all" />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Order Detail Modal */}
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/60" onClick={() => setSelectedOrder(null)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative z-50 bg-background border border-border rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-heading text-xl font-semibold text-foreground">Order {selectedOrder.id}</h3>
+              <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
+            </div>
+
+            {/* Status Badge */}
+            <div className="flex items-center justify-between mb-4">
+              <span className={`text-xs px-3 py-1.5 rounded-full font-body font-medium ${statusColor[selectedOrder.status]}`}>
+                {selectedOrder.status}
+              </span>
+              <p className="font-body text-xs text-muted-foreground">{selectedOrder.date}</p>
+            </div>
+
+            {/* Tracking Progress */}
+            {selectedOrder.status !== "Cancelled" && (
+              <div className="mb-6">
+                <div className="flex justify-between mb-2">
+                  {["Confirmed", "Processing", "Shipped", "Delivered"].map((step, i) => {
+                    const progress = getProgress(selectedOrder.status);
+                    const stepProgress = (i + 1) * 25;
+                    const isActive = progress >= stepProgress;
+                    return (
+                      <div key={step} className="flex flex-col items-center flex-1">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                        }`}>
+                          {isActive ? <Check size={12} /> : i + 1}
+                        </div>
+                        <span className="text-[10px] font-body text-muted-foreground mt-1 text-center">{step}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${getProgress(selectedOrder.status)}%` }}
+                    transition={{ duration: 0.5 }}
+                    className="h-full bg-primary rounded-full"
+                  />
+                </div>
+              </div>
+            )}
+
+            <Separator className="my-4" />
+
+            {/* Order Details */}
+            <div className="space-y-3">
+              {[
+                ["Items", `${selectedOrder.items} items`],
+                ["Subtotal", `₨ ${(selectedOrder.total - 200).toLocaleString()}`],
+                ["Shipping", "₨ 200"],
+                ["Total", `₨ ${selectedOrder.total.toLocaleString()}`],
+              ].map(([label, value]) => (
+                <div key={label as string} className="flex justify-between">
+                  <span className="font-body text-sm text-muted-foreground">{label}</span>
+                  <span className={`font-body text-sm ${label === "Total" ? "font-semibold text-foreground" : "text-foreground"}`}>{value}</span>
+                </div>
+              ))}
+            </div>
+
+            <Separator className="my-4" />
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-2">
+              {selectedOrder.status === "In Transit" && (
+                <Button variant="outline" className="w-full font-body text-xs tracking-wider uppercase" onClick={() => { toast({ title: "Tracking page coming soon!" }); }}>
+                  <Truck size={14} className="mr-2" /> Track Order
+                </Button>
+              )}
+              <Button variant="outline" className="w-full font-body text-xs tracking-wider uppercase" onClick={() => handleDownloadInvoice(selectedOrder)}>
+                <Package size={14} className="mr-2" /> Download Invoice
+              </Button>
+              {selectedOrder.status === "Delivered" && (
+                <Button className="w-full font-body text-xs tracking-wider uppercase" onClick={() => { toast({ title: "Items added to cart for reorder!" }); setSelectedOrder(null); }}>
+                  <Star size={14} className="mr-2" /> Reorder
+                </Button>
+              )}
+              {(selectedOrder.status === "Processing") && (
+                <Button variant="outline" className="w-full font-body text-xs tracking-wider uppercase text-destructive border-destructive/30 hover:bg-destructive/5" onClick={() => handleCancel(selectedOrder.id)}>
+                  <X size={14} className="mr-2" /> Cancel Order
+                </Button>
+              )}
+              {selectedOrder.status === "Delivered" && (
+                <Button variant="outline" className="w-full font-body text-xs tracking-wider uppercase" onClick={() => { toast({ title: "Return request submitted!" }); }}>
+                  <Clock size={14} className="mr-2" /> Request Return
+                </Button>
+              )}
+            </div>
+
+            <Button variant="ghost" className="w-full mt-3 font-body text-xs tracking-wider uppercase" onClick={() => setSelectedOrder(null)}>Close</Button>
+          </motion.div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 const AddressesTab = () => (
   <div className="space-y-6">
