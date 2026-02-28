@@ -1136,32 +1136,198 @@ const PaymentsTab = () => {
   );
 };
 
-const NotificationsTab = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h2 className="font-heading text-2xl font-semibold text-foreground">Notifications</h2>
-      <Button variant="ghost" size="sm" className="font-body text-xs text-primary">Mark all read</Button>
-    </div>
+const NotificationsTab = () => {
+  const [notifications, setNotifications] = useState(mockNotifications.map(n => ({ ...n })));
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [readFilter, setReadFilter] = useState<"all" | "unread" | "read">("all");
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
-    <div className="space-y-2">
-      {mockNotifications.map(n => (
-        <div key={n.id} className={`bg-card border border-border rounded-lg p-4 flex gap-3 ${!n.read ? "border-l-2 border-l-primary" : ""}`}>
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${n.type === "order" ? "bg-blue-50 text-blue-600" : n.type === "promo" ? "bg-amber-50 text-amber-600" : "bg-green-50 text-green-600"}`}>
-            {n.type === "order" ? <Truck size={16} /> : n.type === "promo" ? <Gift size={16} /> : <Star size={16} />}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <p className={`font-body text-sm ${!n.read ? "font-medium text-foreground" : "text-muted-foreground"}`}>{n.title}</p>
-              <span className="text-[10px] text-muted-foreground font-body flex-shrink-0 ml-2">{n.time}</span>
-            </div>
-            <p className="font-body text-xs text-muted-foreground mt-0.5">{n.message}</p>
-          </div>
-          {!n.read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />}
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const filtered = notifications.filter(n => {
+    if (typeFilter !== "all" && n.type !== typeFilter) return false;
+    if (readFilter === "unread" && n.read) return false;
+    if (readFilter === "read" && !n.read) return false;
+    return true;
+  });
+
+  const markAsRead = (id: number) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const markAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    toast({ title: "All notifications marked as read" });
+  };
+
+  const toggleRead = (id: number) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: !n.read } : n));
+  };
+
+  const deleteNotification = (id: number) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    setDeleteConfirm(null);
+    toast({ title: "Notification deleted" });
+  };
+
+  const clearAll = () => {
+    setNotifications([]);
+    toast({ title: "All notifications cleared" });
+  };
+
+  const typeFilters = [
+    { key: "all", label: "All" },
+    { key: "order", label: "Orders" },
+    { key: "promo", label: "Promotions" },
+    { key: "review", label: "Reviews" },
+  ];
+
+  const typeStyles: Record<string, string> = {
+    order: "bg-blue-500/10 text-blue-600",
+    promo: "bg-amber-500/10 text-amber-600",
+    review: "bg-green-500/10 text-green-600",
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="font-heading text-2xl font-semibold text-foreground">Notifications</h2>
+          {unreadCount > 0 && (
+            <Badge variant="secondary" className="font-body text-xs">{unreadCount} unread</Badge>
+          )}
         </div>
-      ))}
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <Button variant="ghost" size="sm" className="font-body text-xs text-primary" onClick={markAllRead}>
+              <Check size={14} className="mr-1" /> Mark all read
+            </Button>
+          )}
+          {notifications.length > 0 && (
+            <Button variant="ghost" size="sm" className="font-body text-xs text-destructive hover:text-destructive" onClick={clearAll}>
+              <Trash2 size={14} className="mr-1" /> Clear all
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        {/* Type filter */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {typeFilters.map(f => (
+            <button
+              key={f.key}
+              onClick={() => setTypeFilter(f.key)}
+              className={`px-3 py-1.5 rounded-full text-xs font-body transition-colors ${
+                typeFilter === f.key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Read filter */}
+        <div className="flex items-center gap-1.5 sm:ml-auto">
+          {(["all", "unread", "read"] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => setReadFilter(f)}
+              className={`px-3 py-1.5 rounded-full text-xs font-body capitalize transition-colors ${
+                readFilter === f
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Notification list */}
+      <div className="space-y-2">
+        <AnimatePresence mode="popLayout">
+          {filtered.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="py-12 text-center"
+            >
+              <Bell size={32} className="mx-auto text-muted-foreground/30 mb-3" />
+              <p className="font-body text-sm text-muted-foreground">No notifications</p>
+              <p className="font-body text-xs text-muted-foreground/70 mt-1">
+                {notifications.length > 0 ? "Try adjusting your filters" : "You're all caught up!"}
+              </p>
+            </motion.div>
+          ) : (
+            filtered.map(n => (
+              <motion.div
+                key={n.id}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.2 }}
+                className={`bg-card border border-border rounded-lg p-4 flex gap-3 group cursor-pointer transition-colors hover:bg-secondary/30 ${!n.read ? "border-l-2 border-l-primary" : ""}`}
+                onClick={() => markAsRead(n.id)}
+              >
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${typeStyles[n.type] || "bg-muted text-muted-foreground"}`}>
+                  {n.type === "order" ? <Truck size={16} /> : n.type === "promo" ? <Gift size={16} /> : <Star size={16} />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className={`font-body text-sm ${!n.read ? "font-medium text-foreground" : "text-muted-foreground"}`}>{n.title}</p>
+                    <span className="text-[10px] text-muted-foreground font-body flex-shrink-0 ml-2">{n.time}</span>
+                  </div>
+                  <p className="font-body text-xs text-muted-foreground mt-0.5">{n.message}</p>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleRead(n.id); }}
+                      className="text-[11px] font-body text-primary hover:underline"
+                    >
+                      {n.read ? "Mark unread" : "Mark read"}
+                    </button>
+                    <span className="text-muted-foreground/30">·</span>
+                    {deleteConfirm === n.id ? (
+                      <>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}
+                          className="text-[11px] font-body text-destructive hover:underline"
+                        >
+                          Confirm delete
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteConfirm(null); }}
+                          className="text-[11px] font-body text-muted-foreground hover:underline"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm(n.id); }}
+                        className="text-[11px] font-body text-destructive/70 hover:text-destructive hover:underline"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {!n.read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />}
+              </motion.div>
+            ))
+          )}
+        </AnimatePresence>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const SecurityTab = () => {
   const [showOld, setShowOld] = useState(false);
