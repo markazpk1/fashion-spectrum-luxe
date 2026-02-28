@@ -668,38 +668,191 @@ const OrdersTab = () => {
   );
 };
 
-const AddressesTab = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h2 className="font-heading text-2xl font-semibold text-foreground">Address Book</h2>
-      <Button size="sm" className="font-body text-xs tracking-wider uppercase">
-        <Plus size={14} className="mr-1" /> Add Address
-      </Button>
-    </div>
+const AddressesTab = () => {
+  const [addresses, setAddresses] = useState(mockAddresses);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const emptyForm = { label: "", name: "", street: "", city: "", state: "", zip: "", phone: "" };
+  const [form, setForm] = useState(emptyForm);
 
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {mockAddresses.map(addr => (
-        <div key={addr.id} className={`bg-card border rounded-lg p-5 relative ${addr.isDefault ? "border-primary" : "border-border"}`}>
-          {addr.isDefault && (
-            <Badge className="absolute top-3 right-3 bg-primary/10 text-primary border-0 font-body text-[10px]">Default</Badge>
-          )}
-          <div className="flex items-center gap-2 mb-3">
-            <MapPin size={16} className="text-primary" />
-            <span className="font-body text-sm font-medium text-foreground">{addr.label}</span>
-          </div>
-          <p className="font-body text-sm text-foreground">{addr.name}</p>
-          <p className="font-body text-sm text-muted-foreground">{addr.street}</p>
-          <p className="font-body text-sm text-muted-foreground">{addr.city}, {addr.state} {addr.zip}</p>
-          <p className="font-body text-sm text-muted-foreground mt-1">{addr.phone}</p>
-          <div className="flex gap-2 mt-4">
-            <Button variant="outline" size="sm" className="font-body text-xs"><Edit2 size={12} className="mr-1" /> Edit</Button>
-            {!addr.isDefault && <Button variant="ghost" size="sm" className="font-body text-xs text-destructive"><Trash2 size={12} className="mr-1" /> Remove</Button>}
-          </div>
+  const openAdd = () => { setForm(emptyForm); setEditingId(null); setShowForm(true); };
+  const openEdit = (addr: typeof mockAddresses[0]) => {
+    setForm({ label: addr.label, name: addr.name, street: addr.street, city: addr.city, state: addr.state, zip: addr.zip, phone: addr.phone });
+    setEditingId(addr.id);
+    setShowForm(true);
+  };
+
+  const handleSave = () => {
+    if (!form.label.trim() || !form.name.trim() || !form.street.trim() || !form.city.trim() || !form.phone.trim()) {
+      toast({ title: "Please fill all required fields", variant: "destructive" });
+      return;
+    }
+    if (editingId !== null) {
+      setAddresses(prev => prev.map(a => a.id === editingId ? { ...a, ...form } : a));
+      toast({ title: "Address updated successfully!" });
+    } else {
+      const newAddr = { id: Date.now(), ...form, isDefault: addresses.length === 0 };
+      setAddresses(prev => [...prev, newAddr]);
+      toast({ title: "Address added successfully!" });
+    }
+    setShowForm(false);
+    setEditingId(null);
+  };
+
+  const handleDelete = (id: number) => {
+    setAddresses(prev => prev.filter(a => a.id !== id));
+    setDeleteConfirm(null);
+    toast({ title: "Address removed" });
+  };
+
+  const setDefault = (id: number) => {
+    setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === id })));
+    toast({ title: "Default address updated" });
+  };
+
+  const updateField = (key: string, value: string) => setForm(prev => ({ ...prev, [key]: value }));
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-heading text-2xl font-semibold text-foreground">Address Book</h2>
+        <Button size="sm" className="font-body text-xs tracking-wider uppercase" onClick={openAdd}>
+          <Plus size={14} className="mr-1" /> Add Address
+        </Button>
+      </div>
+
+      {addresses.length === 0 ? (
+        <div className="text-center py-16">
+          <MapPin size={48} className="mx-auto text-muted-foreground/30 mb-4" />
+          <p className="font-heading text-xl text-muted-foreground">No addresses saved</p>
+          <p className="text-sm text-muted-foreground font-body mt-1">Add a delivery address to get started</p>
+          <Button className="mt-6 font-body text-xs tracking-wider uppercase" onClick={openAdd}>Add Address</Button>
         </div>
-      ))}
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {addresses.map(addr => (
+            <div key={addr.id} className={`bg-card border rounded-lg p-5 relative ${addr.isDefault ? "border-primary" : "border-border"}`}>
+              {addr.isDefault && (
+                <Badge className="absolute top-3 right-3 bg-primary/10 text-primary border-0 font-body text-[10px]">Default</Badge>
+              )}
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin size={16} className="text-primary" />
+                <span className="font-body text-sm font-medium text-foreground">{addr.label}</span>
+              </div>
+              <p className="font-body text-sm text-foreground">{addr.name}</p>
+              <p className="font-body text-sm text-muted-foreground">{addr.street}</p>
+              <p className="font-body text-sm text-muted-foreground">{addr.city}, {addr.state} {addr.zip}</p>
+              <p className="font-body text-sm text-muted-foreground mt-1">{addr.phone}</p>
+              <div className="flex gap-2 mt-4 flex-wrap">
+                <Button variant="outline" size="sm" className="font-body text-xs" onClick={() => openEdit(addr)}>
+                  <Edit2 size={12} className="mr-1" /> Edit
+                </Button>
+                {!addr.isDefault && (
+                  <>
+                    <Button variant="outline" size="sm" className="font-body text-xs text-primary" onClick={() => setDefault(addr.id)}>
+                      <Check size={12} className="mr-1" /> Set as Default
+                    </Button>
+                    <Button variant="ghost" size="sm" className="font-body text-xs text-destructive" onClick={() => setDeleteConfirm(addr.id)}>
+                      <Trash2 size={12} className="mr-1" /> Remove
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add/Edit Address Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/60" onClick={() => setShowForm(false)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative z-50 bg-background border border-border rounded-xl shadow-xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-heading text-lg font-semibold text-foreground">
+                {editingId !== null ? "Edit Address" : "Add New Address"}
+              </h3>
+              <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="font-body text-xs uppercase text-muted-foreground">Label *</Label>
+                <div className="flex gap-2">
+                  {["Home", "Office", "Other"].map(l => (
+                    <button
+                      key={l}
+                      onClick={() => updateField("label", l)}
+                      className={`px-3 py-1.5 rounded-full font-body text-xs transition-all ${
+                        form.label === l ? "bg-primary text-primary-foreground" : "bg-card border border-border text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+                {!["Home", "Office", "Other"].includes(form.label) && (
+                  <Input placeholder="Custom label" value={form.label} onChange={e => updateField("label", e.target.value)} className="h-10 bg-card border-border font-body mt-2" />
+                )}
+              </div>
+              {[
+                { key: "name", label: "Full Name *", placeholder: "Recipient name" },
+                { key: "street", label: "Street Address *", placeholder: "Street, apartment, suite" },
+                { key: "city", label: "City *", placeholder: "City" },
+                { key: "state", label: "State / Province", placeholder: "State" },
+                { key: "zip", label: "ZIP / Postal Code", placeholder: "Postal code" },
+                { key: "phone", label: "Phone Number *", placeholder: "+92 xxx xxxxxxx" },
+              ].map(f => (
+                <div key={f.key} className="space-y-1.5">
+                  <Label className="font-body text-xs uppercase text-muted-foreground">{f.label}</Label>
+                  <Input
+                    placeholder={f.placeholder}
+                    value={form[f.key as keyof typeof form]}
+                    onChange={e => updateField(f.key, e.target.value)}
+                    className="h-10 bg-card border-border font-body"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button variant="outline" className="flex-1 font-body text-xs tracking-wider uppercase" onClick={() => setShowForm(false)}>
+                Cancel
+              </Button>
+              <Button className="flex-1 font-body text-xs tracking-wider uppercase" onClick={handleSave}>
+                {editingId !== null ? "Save Changes" : "Add Address"}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteConfirm !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/60" onClick={() => setDeleteConfirm(null)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative z-50 bg-background border border-border rounded-xl shadow-xl w-full max-w-sm mx-4 p-6"
+          >
+            <h3 className="font-heading text-lg font-semibold text-foreground mb-2">Remove Address</h3>
+            <p className="font-body text-sm text-muted-foreground mb-5">Are you sure you want to remove this address? This action cannot be undone.</p>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1 font-body text-xs tracking-wider uppercase" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+              <Button variant="destructive" className="flex-1 font-body text-xs tracking-wider uppercase" onClick={() => handleDelete(deleteConfirm)}>Remove</Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 const WishlistTab = () => {
   const { items, removeItem } = useWishlist();
