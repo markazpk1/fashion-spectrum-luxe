@@ -7,8 +7,8 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import SearchOverlay from "./SearchOverlay";
 
 const whereToBuyLinks = [
-  { label: "Ambia collections", url: "https://ambiacollections.com.au/" },
-  { label: "Pizzaz boutique", url: "https://www.pizzaz.com.au/" },
+  { label: "Ambia collections", url: "https://www.ambia.com.au/" },
+  { label: "Pizzaz boutique", url: "https://pizazzboutique.com.au/" },
 ];
 
 const navLinks = [
