@@ -8,11 +8,11 @@ import SearchOverlay from "./SearchOverlay";
 
 const navLinks = [
   { label: "Home", to: "/" },
-  { label: "Shop", to: "/shop" },
-  { label: "Collections", to: "/collections" },
-  { label: "New Arrivals", to: "/new-arrivals" },
-  { label: "Sale", to: "/sale" },
-  
+  { label: "Safari Collection", to: "/collections" },
+  { label: "Paradise Collection", to: "/new-arrivals" },
+  { label: "Where to Buy", to: "/shop" },
+  { label: "Contact Us", to: "/sale" },
+  { label: "Our Story", to: "/collections" },
 ];
 
 const Navbar = () => {

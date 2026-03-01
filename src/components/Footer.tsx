@@ -5,8 +5,8 @@ import { FooterContent } from "@/hooks/usePageContent";
 
 const footerSections = [
   {
-    title: "Shop",
-    items: ["Kaftans", "Dresses", "Co-Ord Sets", "Tops & Tunics", "Accessories"],
+    title: "Menu",
+    items: ["Home", "Safari Collection", "Paradise Collection", "Where to Buy", "Contact Us", "Our Story"],
   },
   {
     title: "Know Us",
