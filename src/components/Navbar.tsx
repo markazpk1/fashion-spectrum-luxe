@@ -12,7 +12,7 @@ const navLinks = [
   { label: "Paradise Collection", to: "/paradise-collection" },
   { label: "Where to Buy", to: "/shop" },
   { label: "Contact Us", to: "/sale" },
-  { label: "Our Story", to: "/collections" },
+  { label: "Our Story", to: "/our-story" },
 ];
 
 const Navbar = () => {

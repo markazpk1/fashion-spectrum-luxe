@@ -27,6 +27,7 @@ import Wishlist from "./pages/Wishlist";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
+import OurStory from "./pages/OurStory";
 import NotFound from "./pages/NotFound";
 
 // Admin
@@ -107,6 +108,7 @@ const AnimatedRoutes = () => {
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
           <Route path="/account" element={<PageTransition><UserDashboard /></PageTransition>} />
+          <Route path="/our-story" element={<PageTransition><OurStory /></PageTransition>} />
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
