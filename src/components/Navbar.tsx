@@ -49,7 +49,7 @@ const Navbar = () => {
           </Link>
 
           {/* Nav Links */}
-          <nav className="flex items-center gap-4 xl:gap-7 ml-6 xl:ml-10">
+          <nav className="flex items-center gap-3 xl:gap-5 ml-4 xl:ml-8">
             {navLinks.map((link) =>
               link.label === "Where to Buy" ? (
                 <div
