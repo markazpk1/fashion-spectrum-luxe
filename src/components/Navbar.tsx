@@ -11,7 +11,7 @@ const navLinks = [
   { label: "Safari Collection", to: "/safari-collection" },
   { label: "Paradise Collection", to: "/paradise-collection" },
   { label: "Where to Buy", to: "/shop" },
-  { label: "Contact Us", to: "/sale" },
+  { label: "Contact Us", to: "/contact-us" },
   { label: "Our Story", to: "/our-story" },
 ];
 
