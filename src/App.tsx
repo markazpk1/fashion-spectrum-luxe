@@ -18,7 +18,7 @@ import Shop from "./pages/Shop";
 import Collections from "./pages/Collections";
 import NewArrivals from "./pages/NewArrivals";
 import Sale from "./pages/Sale";
-import BestSellers from "./pages/BestSellers";
+import AdminCollections from "./pages/admin/AdminCollections";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import Wishlist from "./pages/Wishlist";
@@ -96,7 +96,7 @@ const AnimatedRoutes = () => {
           <Route path="/collections" element={<PageTransition><Collections /></PageTransition>} />
           <Route path="/new-arrivals" element={<PageTransition><NewArrivals /></PageTransition>} />
           <Route path="/sale" element={<PageTransition><Sale /></PageTransition>} />
-          <Route path="/best-sellers" element={<PageTransition><BestSellers /></PageTransition>} />
+          
           <Route path="/product/:slug" element={<PageTransition><ProductDetail /></PageTransition>} />
           <Route path="/checkout" element={<PageTransition><Checkout /></PageTransition>} />
           <Route path="/wishlist" element={<PageTransition><Wishlist /></PageTransition>} />
@@ -115,6 +115,7 @@ const AnimatedRoutes = () => {
             <Route path="coupons" element={<AdminCoupons />} />
             <Route path="reviews" element={<AdminReviews />} />
             <Route path="categories" element={<AdminCategories />} />
+            <Route path="collections" element={<AdminCollections />} />
             <Route path="inventory" element={<AdminInventory />} />
             <Route path="pages" element={<AdminPages />} />
             <Route path="pages/edit/:pageId" element={<AdminPageEditor />} />

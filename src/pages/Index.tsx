@@ -5,7 +5,7 @@ import ProductSection from "@/components/ProductSection";
 import CollectionBanner from "@/components/CollectionBanner";
 import AboutBrand from "@/components/AboutBrand";
 import Footer from "@/components/Footer";
-import { newArrivals, saleProducts, bestSellers } from "@/lib/products";
+import { newArrivals, saleProducts } from "@/lib/products";
 import { useHomePageContent, isSectionEnabled } from "@/hooks/usePageContent";
 
 const Index = () => {
@@ -44,15 +44,6 @@ const Index = () => {
         />
       )}
 
-      {isEnabled("bestSellers") && (
-        <section id="best-sellers">
-          <ProductSection
-            title="Best Sellers"
-            products={bestSellers}
-            viewAllLink="/best-sellers"
-          />
-        </section>
-      )}
 
       {isEnabled("about") && (
         <AboutBrand content={content.about} image={content.aboutImage} />
