@@ -20,6 +20,7 @@ import NewArrivals from "./pages/NewArrivals";
 import Sale from "./pages/Sale";
 import AdminCollections from "./pages/admin/AdminCollections";
 import SafariCollection from "./pages/SafariCollection";
+import ParadiseCollection from "./pages/ParadiseCollection";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import Wishlist from "./pages/Wishlist";
@@ -96,6 +97,7 @@ const AnimatedRoutes = () => {
           <Route path="/shop" element={<PageTransition><Shop /></PageTransition>} />
           <Route path="/collections" element={<PageTransition><Collections /></PageTransition>} />
           <Route path="/safari-collection" element={<PageTransition><SafariCollection /></PageTransition>} />
+          <Route path="/paradise-collection" element={<PageTransition><ParadiseCollection /></PageTransition>} />
           <Route path="/new-arrivals" element={<PageTransition><NewArrivals /></PageTransition>} />
           <Route path="/sale" element={<PageTransition><Sale /></PageTransition>} />
           
