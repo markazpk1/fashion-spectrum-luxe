@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Heart, Search, ShoppingBag, Menu, X, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import SearchOverlay from "./SearchOverlay";
+
+const whereToBuyLinks = [
+  { label: "Ambia collections", url: "https://ambiacollections.com.au/" },
+  { label: "Pizzaz boutique", url: "https://www.pizzaz.com.au/" },
+];
 
 const navLinks = [
   { label: "Home", to: "/" },
@@ -18,9 +23,19 @@ const navLinks = [
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [whereToBuyOpen, setWhereToBuyOpen] = useState(false);
+  const whereToBuyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openCart, totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const location = useLocation();
+
+  const handleWhereToBuyEnter = () => {
+    if (whereToBuyTimeout.current) clearTimeout(whereToBuyTimeout.current);
+    setWhereToBuyOpen(true);
+  };
+  const handleWhereToBuyLeave = () => {
+    whereToBuyTimeout.current = setTimeout(() => setWhereToBuyOpen(false), 200);
+  };
 
   return (
     <>
@@ -31,19 +46,62 @@ const Navbar = () => {
           </Link>
 
            <nav className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                to={link.to}
-                className={`font-body text-sm tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary ${
-                  location.pathname === link.to
-                    ? "text-primary font-medium"
-                    : "text-foreground"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => 
+              link.label === "Where to Buy" ? (
+                <div
+                  key={link.label}
+                  className="relative"
+                  onMouseEnter={handleWhereToBuyEnter}
+                  onMouseLeave={handleWhereToBuyLeave}
+                >
+                  <Link
+                    to={link.to}
+                    className={`font-body text-sm tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary ${
+                      location.pathname === link.to
+                        ? "text-primary font-medium"
+                        : "text-foreground"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                  <AnimatePresence>
+                    {whereToBuyOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full left-0 mt-2 min-w-[200px] bg-foreground rounded-md shadow-lg py-3 z-50"
+                      >
+                        {whereToBuyLinks.map((item) => (
+                          <a
+                            key={item.label}
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block px-5 py-2 text-sm font-body text-background hover:text-primary-foreground/80 transition-colors"
+                          >
+                            {item.label}
+                          </a>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <Link
+                  key={link.label}
+                  to={link.to}
+                  className={`font-body text-sm tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary ${
+                    location.pathname === link.to
+                      ? "text-primary font-medium"
+                      : "text-foreground"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
