@@ -19,6 +19,7 @@ import Collections from "./pages/Collections";
 import NewArrivals from "./pages/NewArrivals";
 import Sale from "./pages/Sale";
 import AdminCollections from "./pages/admin/AdminCollections";
+import SafariCollection from "./pages/SafariCollection";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import Wishlist from "./pages/Wishlist";
@@ -94,6 +95,7 @@ const AnimatedRoutes = () => {
           <Route path="/" element={<PageTransition><Index /></PageTransition>} />
           <Route path="/shop" element={<PageTransition><Shop /></PageTransition>} />
           <Route path="/collections" element={<PageTransition><Collections /></PageTransition>} />
+          <Route path="/safari-collection" element={<PageTransition><SafariCollection /></PageTransition>} />
           <Route path="/new-arrivals" element={<PageTransition><NewArrivals /></PageTransition>} />
           <Route path="/sale" element={<PageTransition><Sale /></PageTransition>} />
           

@@ -8,7 +8,7 @@ import SearchOverlay from "./SearchOverlay";
 
 const navLinks = [
   { label: "Home", to: "/" },
-  { label: "Safari Collection", to: "/collections" },
+  { label: "Safari Collection", to: "/safari-collection" },
   { label: "Paradise Collection", to: "/new-arrivals" },
   { label: "Where to Buy", to: "/shop" },
   { label: "Contact Us", to: "/sale" },
