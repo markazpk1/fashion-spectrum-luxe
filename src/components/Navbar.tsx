@@ -12,7 +12,7 @@ const navLinks = [
   { label: "Collections", to: "/collections" },
   { label: "New Arrivals", to: "/new-arrivals" },
   { label: "Sale", to: "/sale" },
-  { label: "Best Sellers", to: "/best-sellers" },
+  
 ];
 
 const Navbar = () => {
