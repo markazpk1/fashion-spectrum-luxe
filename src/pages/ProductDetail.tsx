@@ -37,7 +37,7 @@ const ProductDetail = () => {
     addItem(product, "One Size", quantity);
   };
 
-  const discount = product.originalPrice
+  const discount = product.originalPrice && product.price
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
@@ -88,19 +88,21 @@ const ProductDetail = () => {
                 {product.name}
               </h1>
 
-              <div className="flex items-center gap-3 mb-6">
-                <span className="font-heading text-xl sm:text-2xl text-foreground">${product.price.toFixed(2)}</span>
-                {product.originalPrice && (
-                  <>
-                    <span className="font-body text-base sm:text-lg text-muted-foreground line-through">
-                      ${product.originalPrice.toFixed(2)}
-                    </span>
-                    <span className="font-body text-xs bg-sale text-primary-foreground px-2 py-1">
-                      Save {discount}%
-                    </span>
-                  </>
-                )}
-              </div>
+              {product.price != null && (
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="font-heading text-xl sm:text-2xl text-foreground">${product.price.toFixed(2)}</span>
+                  {product.originalPrice && (
+                    <>
+                      <span className="font-body text-base sm:text-lg text-muted-foreground line-through">
+                        ${product.originalPrice.toFixed(2)}
+                      </span>
+                      <span className="font-body text-xs bg-sale text-primary-foreground px-2 py-1">
+                        Save {discount}%
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Description - Style & Color from website */}
               <div className="mb-8 space-y-2">

@@ -15,7 +15,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const { addItem } = useCart();
   const { toggleItem, isInWishlist } = useWishlist();
   const wishlisted = isInWishlist(product.id);
-  const discount = product.originalPrice
+  const discount = product.originalPrice && product.price
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
@@ -107,21 +107,23 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
         <h3 className="font-body text-xs tracking-[0.1em] uppercase text-foreground group-hover:text-primary transition-colors duration-300">
           {product.name}
         </h3>
-        <div className="flex items-center gap-2">
-          <span className="font-body text-sm font-medium text-foreground">
-            ${product.price.toFixed(2)}
-          </span>
-          {product.originalPrice && (
-            <>
-              <span className="font-body text-sm text-muted-foreground line-through">
-                ${product.originalPrice.toFixed(2)}
-              </span>
-              <span className="font-body text-xs text-sale font-medium">
-                Save {discount}%
-              </span>
-            </>
-          )}
-        </div>
+        {product.price != null && (
+          <div className="flex items-center gap-2">
+            <span className="font-body text-sm font-medium text-foreground">
+              ${product.price.toFixed(2)}
+            </span>
+            {product.originalPrice && (
+              <>
+                <span className="font-body text-sm text-muted-foreground line-through">
+                  ${product.originalPrice.toFixed(2)}
+                </span>
+                <span className="font-body text-xs text-sale font-medium">
+                  Save {discount}%
+                </span>
+              </>
+            )}
+          </div>
+        )}
       </Link>
     </motion.div>
   );

@@ -18,7 +18,7 @@ import product16 from "@/assets/product-16.jpg";
 export interface Product {
   id: string;
   name: string;
-  price: number;
+  price?: number;
   originalPrice?: number;
   image: string;
   badge?: "New in" | "Sold out" | "Sale";
