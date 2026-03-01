@@ -1,6 +1,8 @@
 import { newArrivals, saleProducts, bestSellers, type Product } from "./products";
+import { paradiseProducts } from "./paradiseProducts";
+import { safariProducts } from "./safariProducts";
 
-const allProducts: Product[] = [...newArrivals, ...saleProducts, ...bestSellers];
+const allProducts: Product[] = [...newArrivals, ...saleProducts, ...bestSellers, ...safariProducts, ...paradiseProducts];
 
 export const getProductBySlug = (slug: string): Product | undefined => {
   return allProducts.find((p) => slugify(p.name) === slug);
