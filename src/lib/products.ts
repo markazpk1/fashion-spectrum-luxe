@@ -23,6 +23,8 @@ export interface Product {
   image: string;
   badge?: "New in" | "Sold out" | "Sale";
   category: string;
+  style?: string;
+  color?: string;
 }
 
 export const newArrivals: Product[] = [

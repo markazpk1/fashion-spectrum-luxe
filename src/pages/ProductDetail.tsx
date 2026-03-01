@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Heart, Minus, Plus, Truck, RotateCcw, Shield } from "lucide-react";
 import { getProductBySlug, getRelatedProducts } from "@/lib/productUtils";
 import { useCart } from "@/contexts/CartContext";
@@ -10,17 +10,12 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 
-const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
-
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const product = getProductBySlug(slug || "");
   const { addItem } = useCart();
   const { toggleItem, isInWishlist } = useWishlist();
-  const [selectedSize, setSelectedSize] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [sizeError, setSizeError] = useState(false);
 
   if (!product) {
     return (
@@ -37,13 +32,9 @@ const ProductDetail = () => {
 
   const wishlisted = isInWishlist(product.id);
   const related = getRelatedProducts(product);
+
   const handleAddToCart = () => {
-    if (!selectedSize) {
-      setSizeError(true);
-      return;
-    }
-    setSizeError(false);
-    addItem(product, selectedSize, quantity);
+    addItem(product, "One Size", quantity);
   };
 
   const discount = product.originalPrice
@@ -67,7 +58,7 @@ const ProductDetail = () => {
       {/* Product */}
       <section className="px-4 sm:px-6 md:px-16 pb-16 md:pb-24">
         <div className="grid md:grid-cols-2 gap-6 md:gap-16 max-w-7xl mx-auto">
-          {/* Image Gallery */}
+          {/* Image */}
           <div className="space-y-3 md:space-y-4">
             <motion.div
               initial={{ opacity: 0 }}
@@ -111,47 +102,23 @@ const ProductDetail = () => {
                 )}
               </div>
 
-              <p className="font-body text-sm leading-relaxed text-muted-foreground mb-8">
-                A beautifully crafted piece from FashionSpectrum's latest collection. Made with premium quality fabrics and intricate detailing, this {product.category.toLowerCase()} exudes elegance and sophistication perfect for any occasion.
-              </p>
-
-              {/* Size Selection */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-body text-xs tracking-[0.15em] uppercase text-foreground">
-                    Select Size
-                  </span>
-                  <a href="#" className="font-body text-[10px] tracking-wider uppercase text-muted-foreground hover:text-primary transition-colors underline">
-                    Size Guide
-                  </a>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {sizes.map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => { setSelectedSize(size); setSizeError(false); }}
-                      className={`w-12 h-10 sm:w-14 border font-body text-xs tracking-wider transition-all duration-300 ${
-                        selectedSize === size
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border text-foreground hover:border-primary"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-                <AnimatePresence>
-                  {sizeError && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="font-body text-xs text-sale mt-2"
-                    >
-                      Please select a size
-                    </motion.p>
-                  )}
-                </AnimatePresence>
+              {/* Description - Style & Color from website */}
+              <div className="mb-8 space-y-2">
+                {product.style && (
+                  <p className="font-body text-sm text-muted-foreground">
+                    <span className="text-foreground font-medium">Style :</span> {product.style}
+                  </p>
+                )}
+                {product.color && (
+                  <p className="font-body text-sm text-muted-foreground">
+                    <span className="text-foreground font-medium">Color :</span> {product.color}
+                  </p>
+                )}
+                {!product.style && !product.color && (
+                  <p className="font-body text-sm leading-relaxed text-muted-foreground">
+                    A beautifully crafted piece from FashionSpectrum's latest collection.
+                  </p>
+                )}
               </div>
 
               {/* Quantity */}
