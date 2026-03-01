@@ -37,8 +37,6 @@ const ProductDetail = () => {
 
   const wishlisted = isInWishlist(product.id);
   const related = getRelatedProducts(product);
-  const galleryImages = [product.image, product.image, product.image, product.image];
-
   const handleAddToCart = () => {
     if (!selectedSize) {
       setSizeError(true);
@@ -72,31 +70,17 @@ const ProductDetail = () => {
           {/* Image Gallery */}
           <div className="space-y-3 md:space-y-4">
             <motion.div
-              key={selectedImageIndex}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.4 }}
               className="aspect-[3/4] overflow-hidden bg-secondary"
             >
               <img
-                src={galleryImages[selectedImageIndex]}
+                src={product.image}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </motion.div>
-            <div className="flex gap-2 md:gap-3">
-              {galleryImages.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImageIndex(i)}
-                  className={`w-16 h-20 md:w-20 md:h-24 overflow-hidden border-2 transition-all duration-300 ${
-                    selectedImageIndex === i ? "border-primary" : "border-transparent hover:border-border"
-                  }`}
-                >
-                  <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Product Info */}
