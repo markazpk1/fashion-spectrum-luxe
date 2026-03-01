@@ -24,6 +24,7 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [whereToBuyOpen, setWhereToBuyOpen] = useState(false);
+  const [mobileWhereToBuyOpen, setMobileWhereToBuyOpen] = useState(false);
   const whereToBuyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openCart, totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
@@ -40,13 +41,16 @@ const Navbar = () => {
   return (
     <>
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50 shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.08)]">
-        <div className="container mx-auto flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
-          <Link to="/" className="font-heading text-xl sm:text-2xl md:text-3xl font-semibold tracking-wider text-primary uppercase lg:flex-none absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0">
+        {/* Desktop Layout */}
+        <div className="hidden lg:flex items-center px-6 xl:px-10 py-3">
+          {/* Logo */}
+          <Link to="/" className="font-heading text-xl xl:text-2xl font-semibold tracking-wider text-primary uppercase shrink-0">
             FashionSpectrum
           </Link>
 
-           <nav className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => 
+          {/* Nav Links */}
+          <nav className="flex items-center gap-4 xl:gap-7 ml-6 xl:ml-10">
+            {navLinks.map((link) =>
               link.label === "Where to Buy" ? (
                 <div
                   key={link.label}
@@ -54,16 +58,15 @@ const Navbar = () => {
                   onMouseEnter={handleWhereToBuyEnter}
                   onMouseLeave={handleWhereToBuyLeave}
                 >
-                  <Link
-                    to={link.to}
-                    className={`font-body text-sm tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary ${
+                  <span
+                    className={`font-body text-xs xl:text-sm tracking-[0.1em] xl:tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary cursor-pointer whitespace-nowrap ${
                       location.pathname === link.to
                         ? "text-primary font-medium"
                         : "text-foreground"
                     }`}
                   >
                     {link.label}
-                  </Link>
+                  </span>
                   <AnimatePresence>
                     {whereToBuyOpen && (
                       <motion.div
@@ -92,7 +95,7 @@ const Navbar = () => {
                 <Link
                   key={link.label}
                   to={link.to}
-                  className={`font-body text-sm tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary ${
+                  className={`font-body text-xs xl:text-sm tracking-[0.1em] xl:tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary whitespace-nowrap ${
                     location.pathname === link.to
                       ? "text-primary font-medium"
                       : "text-foreground"
@@ -104,7 +107,8 @@ const Navbar = () => {
             )}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-4">
+          {/* Icons */}
+          <div className="flex items-center gap-4 ml-auto">
             <button
               onClick={() => setSearchOpen(true)}
               className="text-foreground hover:text-primary transition-colors"
@@ -154,6 +158,49 @@ const Navbar = () => {
           </div>
         </div>
 
+        {/* Mobile / Tablet Layout */}
+        <div className="flex lg:hidden items-center justify-between px-4 sm:px-6 py-3">
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="text-foreground hover:text-primary transition-colors z-10"
+            aria-label="Menu"
+          >
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+
+          <Link to="/" className="font-heading text-lg sm:text-xl font-semibold tracking-wider text-primary uppercase absolute left-1/2 -translate-x-1/2">
+            FashionSpectrum
+          </Link>
+
+          <div className="flex items-center gap-3 z-10">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="text-foreground hover:text-primary transition-colors"
+              aria-label="Search"
+            >
+              <Search size={20} />
+            </button>
+            <button
+              onClick={openCart}
+              className="relative text-foreground hover:text-primary transition-colors"
+              aria-label="Cart"
+            >
+              <ShoppingBag size={20} />
+              {totalItems > 0 && (
+                <motion.span
+                  key={totalItems}
+                  initial={{ scale: 0.5 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-body"
+                >
+                  {totalItems}
+                </motion.span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
         <AnimatePresence>
           {mobileOpen && (
             <motion.nav
@@ -164,18 +211,54 @@ const Navbar = () => {
               className="lg:hidden overflow-hidden border-t border-border bg-background"
             >
               <div className="flex flex-col py-4 px-6 gap-4">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.label}
-                    to={link.to}
-                    onClick={() => setMobileOpen(false)}
-                    className={`font-body text-sm tracking-[0.15em] uppercase ${
-                      link.label === "Sale" ? "text-sale font-medium" : "text-foreground"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                {navLinks.map((link) =>
+                  link.label === "Where to Buy" ? (
+                    <div key={link.label}>
+                      <button
+                        onClick={() => setMobileWhereToBuyOpen(!mobileWhereToBuyOpen)}
+                        className="font-body text-sm tracking-[0.15em] uppercase text-foreground w-full text-left"
+                      >
+                        {link.label}
+                      </button>
+                      <AnimatePresence>
+                        {mobileWhereToBuyOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden pl-4 mt-2 flex flex-col gap-2"
+                          >
+                            {whereToBuyLinks.map((item) => (
+                              <a
+                                key={item.label}
+                                href={item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => setMobileOpen(false)}
+                                className="font-body text-sm tracking-[0.1em] text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                {item.label}
+                              </a>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    <Link
+                      key={link.label}
+                      to={link.to}
+                      onClick={() => setMobileOpen(false)}
+                      className={`font-body text-sm tracking-[0.15em] uppercase ${
+                        location.pathname === link.to
+                          ? "text-primary font-medium"
+                          : "text-foreground"
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  )
+                )}
                 <Link
                   to="/wishlist"
                   onClick={() => setMobileOpen(false)}
