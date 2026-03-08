@@ -56,8 +56,9 @@ import AdminEmailMarketing from "./pages/admin/AdminEmailMarketing";
 const queryClient = new QueryClient();
 
 const AdminProtected = ({ children }: { children: React.ReactNode }) => {
-  const isAuth = sessionStorage.getItem("admin_auth") === "true";
-  return isAuth ? <>{children}</> : <Navigate to="/admin/login" replace />;
+  const { isAdmin, loading } = useAdminAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p className="font-body text-muted-foreground">Loading...</p></div>;
+  return isAdmin ? <>{children}</> : <Navigate to="/admin/login" replace />;
 };
 
 const AnimatedRoutes = () => {
