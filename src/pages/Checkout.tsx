@@ -466,9 +466,10 @@ const Checkout = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex-[2] bg-primary text-primary-foreground font-body text-xs tracking-[0.2em] uppercase py-4 hover:bg-charcoal transition-colors duration-300 active:scale-[0.99]"
+                    disabled={submitting}
+                    className="flex-[2] bg-primary text-primary-foreground font-body text-xs tracking-[0.2em] uppercase py-4 hover:bg-charcoal transition-colors duration-300 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Place Order — ${grandTotal.toFixed(2)}
+                    {submitting ? "Processing..." : `Place Order — $${grandTotal.toFixed(2)}`}
                   </button>
                 </div>
 
