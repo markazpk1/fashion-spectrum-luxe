@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, Shield, Mail } from "lucide-react";
@@ -6,31 +6,62 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-
-const ADMIN_PASSWORD = "admin123";
-
-const ADMIN_EMAIL = "admin@fashionspectrum.com";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { isAdmin, loading } = useAdminAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!loading && isAdmin) {
+      navigate("/admin", { replace: true });
+    }
+  }, [loading, isAdmin, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => {
-      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        sessionStorage.setItem("admin_auth", "true");
-        navigate("/admin");
+    setSubmitting(true);
+    try {
+      const { useAdminAuth: _ } = await import("@/hooks/useAdminAuth");
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+
+      // Check admin role
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Authentication failed");
+
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!roleData) {
+        await supabase.auth.signOut();
+        toast({ title: "Access denied", description: "You don't have admin privileges.", variant: "destructive" });
       } else {
-        toast({ title: "Invalid credentials", variant: "destructive" });
+        navigate("/admin");
       }
-      setLoading(false);
-    }, 500);
+    } catch (err: any) {
+      toast({ title: "Login failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="font-body text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -44,7 +75,7 @@ const AdminLogin = () => {
             <Shield size={32} className="text-primary" />
           </div>
           <h1 className="font-heading text-3xl font-semibold text-foreground">Admin Access</h1>
-          <p className="font-body text-sm text-muted-foreground mt-1">Enter password to continue</p>
+          <p className="font-body text-sm text-muted-foreground mt-1">Sign in with your admin account</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -58,6 +89,7 @@ const AdminLogin = () => {
                 onChange={e => setEmail(e.target.value)}
                 placeholder="Enter admin email"
                 className="pl-9 h-11 bg-card border-border font-body"
+                required
               />
             </div>
           </div>
@@ -70,8 +102,9 @@ const AdminLogin = () => {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="Enter admin password"
+                placeholder="Enter password"
                 className="pl-9 pr-10 h-11 bg-card border-border font-body"
+                required
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -79,14 +112,10 @@ const AdminLogin = () => {
             </div>
           </div>
 
-          <Button type="submit" className="w-full h-11 font-body text-xs tracking-wider uppercase" disabled={loading}>
-            {loading ? "Verifying..." : "Access Admin Panel"}
+          <Button type="submit" className="w-full h-11 font-body text-xs tracking-wider uppercase" disabled={submitting}>
+            {submitting ? "Verifying..." : "Access Admin Panel"}
           </Button>
         </form>
-
-        <p className="text-center text-xs text-muted-foreground font-body mt-6">
-          Demo: <span className="text-primary font-medium">admin@fashionspectrum.com</span> / <span className="text-primary font-medium">admin123</span>
-        </p>
       </motion.div>
     </div>
   );
