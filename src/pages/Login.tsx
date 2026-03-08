@@ -5,32 +5,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useEffect } from "react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const fillDemo = () => {
-    setEmail("demo@fashionspectrum.com");
-    setPassword("demo1234");
-  };
+  useEffect(() => {
+    if (user) navigate("/account", { replace: true });
+  }, [user, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast({ title: "Please fill in all fields", variant: "destructive" });
       return;
     }
-    if (email === "demo@fashionspectrum.com" && password === "demo1234") {
-      localStorage.setItem("fs-user", JSON.stringify({ name: "Ahmed Khan", email }));
-      toast({ title: "Login successful!", description: "Welcome back, Ahmed!" });
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast({ title: "Login successful!", description: "Welcome back!" });
       navigate("/account");
-    } else {
-      toast({ title: "Invalid credentials", description: "Try the demo account below", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "Login failed", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,18 +86,10 @@ const Login = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-12 font-body text-sm tracking-widest uppercase">
-              Sign In
+            <Button type="submit" className="w-full h-12 font-body text-sm tracking-widest uppercase" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-
-          <div className="bg-secondary/50 border border-border rounded-lg p-4 text-center">
-            <p className="font-body text-xs text-muted-foreground mb-2">Demo Account</p>
-            <p className="font-body text-xs text-foreground">demo@fashionspectrum.com / demo1234</p>
-            <Button variant="outline" size="sm" className="mt-2 font-body text-xs" onClick={fillDemo}>
-              Fill Demo Credentials
-            </Button>
-          </div>
 
           <p className="text-center text-sm text-muted-foreground font-body">
             Don't have an account?{" "}

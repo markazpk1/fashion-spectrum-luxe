@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
-import { Heart, Search, ShoppingBag, Menu, X, User } from "lucide-react";
+import { Heart, Search, ShoppingBag, Menu, X, User, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useAuth } from "@/contexts/AuthContext";
 import SearchOverlay from "./SearchOverlay";
 
 const whereToBuyLinks = [
@@ -28,7 +29,9 @@ const Navbar = () => {
   const whereToBuyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openCart, totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
+  const { user, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleWhereToBuyEnter = () => {
     if (whereToBuyTimeout.current) clearTimeout(whereToBuyTimeout.current);
@@ -116,13 +119,24 @@ const Navbar = () => {
             >
               <Search size={20} />
             </button>
-            <Link
-              to="/account"
-              className="text-foreground hover:text-primary transition-colors"
-              aria-label="Account"
-            >
-              <User size={20} />
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-2">
+                <Link to="/account" className="text-foreground hover:text-primary transition-colors" aria-label="Account">
+                  <User size={20} />
+                </Link>
+                <button
+                  onClick={async () => { await signOut(); navigate("/"); }}
+                  className="text-muted-foreground hover:text-destructive transition-colors"
+                  aria-label="Sign out"
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            ) : (
+              <Link to="/login" className="text-foreground hover:text-primary transition-colors" aria-label="Sign in">
+                <User size={20} />
+              </Link>
+            )}
             <Link
               to="/wishlist"
               className="relative text-foreground hover:text-primary transition-colors"

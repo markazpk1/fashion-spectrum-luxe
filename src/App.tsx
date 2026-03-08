@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { AnimatePresence } from "framer-motion";
 import Lenis from "lenis";
 import CartDrawer from "@/components/CartDrawer";
@@ -153,11 +154,13 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <WishlistProvider>
-          <CartProvider>
-            <AnimatedRoutes />
-          </CartProvider>
-        </WishlistProvider>
+        <AuthProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <AnimatedRoutes />
+            </CartProvider>
+          </WishlistProvider>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User, Package, MapPin, Heart, CreditCard, Bell, Settings, LogOut,
@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -1467,6 +1468,24 @@ const tabComponents: Record<TabKey, React.FC> = {
 const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
   const ActiveComponent = tabComponents[activeTab];
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <p className="font-body text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    navigate("/login", { replace: true });
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -1516,12 +1535,13 @@ const UserDashboard = () => {
                 </button>
               ))}
               <Separator className="my-2" />
-              <Link to="/">
-                <button className="w-full flex items-center gap-3 px-4 py-3 rounded-md font-body text-sm text-destructive hover:bg-destructive/5 transition-colors text-left">
-                  <LogOut size={18} />
-                  Sign Out
-                </button>
-              </Link>
+              <button
+                onClick={async () => { await signOut(); navigate("/"); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-md font-body text-sm text-destructive hover:bg-destructive/5 transition-colors text-left"
+              >
+                <LogOut size={18} />
+                Sign Out
+              </button>
             </nav>
           </aside>
 
