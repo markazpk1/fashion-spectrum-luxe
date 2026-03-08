@@ -134,7 +134,7 @@ const Checkout = () => {
     setStep("payment");
   };
 
-  const handlePaymentSubmit = (e: React.FormEvent) => {
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanCard = payment.cardNumber.replace(/\s/g, "");
     const result = paymentSchema.safeParse({ ...payment, cardNumber: cleanCard });
@@ -150,14 +150,70 @@ const Checkout = () => {
     }
 
     setErrors({});
-    if (createAccount) {
-      localStorage.setItem("fs-user", JSON.stringify({
-        name: `${form.firstName} ${form.lastName}`,
-        email: form.email,
+    setSubmitting(true);
+
+    try {
+      // Create order in database
+      const orderData = {
+        customer_name: `${form.firstName} ${form.lastName}`,
+        customer_email: form.email,
+        customer_phone: form.phone || null,
+        shipping_address: [form.address, form.apartment].filter(Boolean).join(", "),
+        shipping_city: form.city,
+        shipping_country: form.country,
+        subtotal: totalPrice,
+        shipping_cost: shipping,
+        discount: 0,
+        total: grandTotal,
+        user_id: user?.id || null,
+        order_number: "TEMP", // trigger will generate real one
+      };
+
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert(orderData)
+        .select("id, order_number")
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = items.map((item) => ({
+        order_id: order.id,
+        product_name: item.product.name,
+        product_id: null as string | null,
+        unit_price: item.product.price,
+        quantity: item.quantity,
+        total_price: item.product.price * item.quantity,
+        size: item.size,
       }));
+
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Handle optional account creation
+      if (createAccount) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: form.email,
+          password,
+        });
+        if (signUpError) {
+          console.warn("Account creation failed:", signUpError.message);
+        }
+      }
+
+      clearCart();
+      setStep("confirmation");
+      toast.success("Order placed successfully!");
+    } catch (err: any) {
+      console.error("Order failed:", err);
+      toast.error(err.message || "Failed to place order. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    clearCart();
-    setStep("confirmation");
   };
 
   if (items.length === 0 && step !== "confirmation") {
