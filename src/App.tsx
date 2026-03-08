@@ -53,6 +53,7 @@ import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminSmtpSettings from "./pages/admin/AdminSmtpSettings";
 import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
 import AdminEmailMarketing from "./pages/admin/AdminEmailMarketing";
+import AdminSetup from "./pages/admin/AdminSetup";
 
 const queryClient = new QueryClient();
 
