@@ -48,16 +48,19 @@ import AdminPageEditor from "./pages/admin/AdminPageEditor";
 import AdminMedia from "./pages/admin/AdminMedia";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminSettings from "./pages/admin/AdminSettings";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminSmtpSettings from "./pages/admin/AdminSmtpSettings";
 import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
 import AdminEmailMarketing from "./pages/admin/AdminEmailMarketing";
+import AdminSetup from "./pages/admin/AdminSetup";
 
 const queryClient = new QueryClient();
 
 const AdminProtected = ({ children }: { children: React.ReactNode }) => {
-  const isAuth = sessionStorage.getItem("admin_auth") === "true";
-  return isAuth ? <>{children}</> : <Navigate to="/admin/login" replace />;
+  const { isAdmin, loading } = useAdminAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p className="font-body text-muted-foreground">Loading...</p></div>;
+  return isAdmin ? <>{children}</> : <Navigate to="/admin/login" replace />;
 };
 
 const AnimatedRoutes = () => {
@@ -114,6 +117,7 @@ const AnimatedRoutes = () => {
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/setup" element={<AdminSetup />} />
           <Route path="/admin" element={<AdminProtected><AdminLayout /></AdminProtected>}>
             <Route index element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
