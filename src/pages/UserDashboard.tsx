@@ -1468,6 +1468,24 @@ const tabComponents: Record<TabKey, React.FC> = {
 const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
   const ActiveComponent = tabComponents[activeTab];
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <p className="font-body text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    navigate("/login", { replace: true });
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
