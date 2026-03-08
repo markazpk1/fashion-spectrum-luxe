@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import { ChevronLeft, Lock, Truck, CreditCard, User, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
 
