@@ -29,7 +29,9 @@ const Navbar = () => {
   const whereToBuyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openCart, totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
+  const { user, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleWhereToBuyEnter = () => {
     if (whereToBuyTimeout.current) clearTimeout(whereToBuyTimeout.current);
