@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Minus, Plus, Truck, RotateCcw, Shield } from "lucide-react";
 import { getProductBySlug, getRelatedProducts } from "@/lib/productUtils";
+import { useProductBySlug } from "@/hooks/useProducts";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import AnnouncementBar from "@/components/AnnouncementBar";
@@ -12,10 +13,21 @@ import ProductCard from "@/components/ProductCard";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-  const product = getProductBySlug(slug || "");
+  const { data: dbProduct, isLoading } = useProductBySlug(slug || "");
+  const staticProduct = getProductBySlug(slug || "");
+  const product = dbProduct || staticProduct;
+
   const { addItem } = useCart();
   const { toggleItem, isInWishlist } = useWishlist();
   const [quantity, setQuantity] = useState(1);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="font-body text-sm text-muted-foreground tracking-widest uppercase animate-pulse">Loading...</div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -31,7 +43,7 @@ const ProductDetail = () => {
   }
 
   const wishlisted = isInWishlist(product.id);
-  const related = getRelatedProducts(product);
+  const related = staticProduct ? getRelatedProducts(staticProduct) : [];
 
   const handleAddToCart = () => {
     addItem(product, "One Size", quantity);
@@ -104,7 +116,7 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              {/* Description - Style & Color from website */}
+              {/* Description */}
               <div className="mb-8 space-y-2">
                 {product.style && (
                   <p className="font-body text-sm text-muted-foreground">
