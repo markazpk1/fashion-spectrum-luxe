@@ -117,6 +117,7 @@ const AnimatedRoutes = () => {
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/setup" element={<AdminSetup />} />
           <Route path="/admin" element={<AdminProtected><AdminLayout /></AdminProtected>}>
             <Route index element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
