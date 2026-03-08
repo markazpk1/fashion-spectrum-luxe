@@ -63,6 +63,7 @@ type Step = "shipping" | "payment" | "confirmation";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState<ShippingForm>(initialShipping);
   const [payment, setPayment] = useState<PaymentForm>(initialPayment);
@@ -72,6 +73,7 @@ const Checkout = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [step, setStep] = useState<Step>("shipping");
+  const [submitting, setSubmitting] = useState(false);
 
   const shipping = totalPrice >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const tax = +(totalPrice * TAX_RATE).toFixed(2);
