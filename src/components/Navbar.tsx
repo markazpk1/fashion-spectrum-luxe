@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
-import { Heart, Search, ShoppingBag, Menu, X, User } from "lucide-react";
+import { Heart, Search, ShoppingBag, Menu, X, User, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useAuth } from "@/contexts/AuthContext";
 import SearchOverlay from "./SearchOverlay";
 
 const whereToBuyLinks = [
