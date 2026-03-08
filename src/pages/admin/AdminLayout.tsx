@@ -85,7 +85,7 @@ const AdminLayout = () => {
       <Separator />
 
       {/* Footer */}
-      <div className="p-3">
+      <div className="p-3 space-y-1">
         <button
           onClick={() => { navigate("/"); }}
           className={cn(
@@ -94,6 +94,19 @@ const AdminLayout = () => {
         >
           <LogOut size={18} className="flex-shrink-0" />
           {!collapsed && <span>Back to Store</span>}
+        </button>
+        <button
+          onClick={async () => {
+            const { supabase } = await import("@/integrations/supabase/client");
+            await supabase.auth.signOut();
+            navigate("/admin/login");
+          }}
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg font-body text-sm text-destructive hover:bg-destructive/10 transition-all w-full"
+          )}
+        >
+          <LogOut size={18} className="flex-shrink-0" />
+          {!collapsed && <span>Sign Out</span>}
         </button>
       </div>
     </div>

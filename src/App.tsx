@@ -48,6 +48,7 @@ import AdminPageEditor from "./pages/admin/AdminPageEditor";
 import AdminMedia from "./pages/admin/AdminMedia";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminSettings from "./pages/admin/AdminSettings";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminSmtpSettings from "./pages/admin/AdminSmtpSettings";
 import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
