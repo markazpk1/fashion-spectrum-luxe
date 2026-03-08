@@ -154,11 +154,13 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <WishlistProvider>
-          <CartProvider>
-            <AnimatedRoutes />
-          </CartProvider>
-        </WishlistProvider>
+        <AuthProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <AnimatedRoutes />
+            </CartProvider>
+          </WishlistProvider>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
