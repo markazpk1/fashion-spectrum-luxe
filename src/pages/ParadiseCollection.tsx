@@ -63,24 +63,26 @@ const ParadiseCollection = () => {
 
   const handleDownloadAll = async () => {
     setDownloading(true);
-    toast({ title: "Downloading", description: "Starting download of 16 images..." });
+    toast({ title: "Preparing ZIP", description: "Packaging 16 images..." });
     try {
+      const zip = new JSZip();
       for (const img of newImages) {
         const response = await fetch(img.src);
         const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = img.name;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        await new Promise((r) => setTimeout(r, 300));
+        zip.file(img.name, blob);
       }
-      toast({ title: "Done!", description: "All 16 images downloaded." });
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Paradise-Collection-New-16.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: "Done!", description: "ZIP file downloaded." });
     } catch {
-      toast({ title: "Error", description: "Failed to download some images.", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to create ZIP.", variant: "destructive" });
     } finally {
       setDownloading(false);
     }
