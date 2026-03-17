@@ -57,6 +57,33 @@ const ParadiseCollection = () => {
   const [sortBy, setSortBy] = useState("popular");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const { toast } = useToast();
+
+  const handleDownloadAll = async () => {
+    setDownloading(true);
+    toast({ title: "Downloading", description: "Starting download of 16 images..." });
+    try {
+      for (const img of newImages) {
+        const response = await fetch(img.src);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = img.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        await new Promise((r) => setTimeout(r, 300));
+      }
+      toast({ title: "Done!", description: "All 16 images downloaded." });
+    } catch {
+      toast({ title: "Error", description: "Failed to download some images.", variant: "destructive" });
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(paradiseProducts.map((p) => p.category)));
