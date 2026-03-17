@@ -128,6 +128,15 @@ const ParadiseCollection = () => {
         <p className="font-body text-sm text-muted-foreground mt-3 tracking-wide">
           {filtered.length} Products
         </p>
+        <Button
+          onClick={handleDownloadAll}
+          disabled={downloading}
+          className="mt-4 gap-2"
+          variant="outline"
+        >
+          <Download size={16} />
+          {downloading ? "Downloading..." : "Download Latest 16 Images"}
+        </Button>
       </div>
 
       {/* Toolbar */}
