@@ -5,7 +5,46 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { paradiseProducts } from "@/lib/paradiseProducts";
-import { SlidersHorizontal, ChevronDown } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+
+// Import the 16 new images directly for download
+import paradise48 from "@/assets/paradise/paradise-48.jpg";
+import paradise49 from "@/assets/paradise/paradise-49.jpg";
+import paradise50 from "@/assets/paradise/paradise-50.jpg";
+import paradise51 from "@/assets/paradise/paradise-51.jpg";
+import paradise52 from "@/assets/paradise/paradise-52.jpg";
+import paradise53 from "@/assets/paradise/paradise-53.jpg";
+import paradise54 from "@/assets/paradise/paradise-54.jpg";
+import paradise55 from "@/assets/paradise/paradise-55.jpg";
+import paradise56 from "@/assets/paradise/paradise-56.jpg";
+import paradise57 from "@/assets/paradise/paradise-57.jpg";
+import paradise58 from "@/assets/paradise/paradise-58.jpg";
+import paradise59 from "@/assets/paradise/paradise-59.jpg";
+import paradise60 from "@/assets/paradise/paradise-60.jpg";
+import paradise61 from "@/assets/paradise/paradise-61.jpg";
+import paradise62 from "@/assets/paradise/paradise-62.jpg";
+import paradise63 from "@/assets/paradise/paradise-63.jpg";
+
+const newImages = [
+  { src: paradise48, name: "Zahara-Pink-Tank-Top.jpg" },
+  { src: paradise49, name: "Monet-Orange-Hi-Low-Dress.jpg" },
+  { src: paradise50, name: "Monet-Orange-Wrap-Pant.jpg" },
+  { src: paradise51, name: "Monet-Orange-Long-Box-Kaftan.jpg" },
+  { src: paradise52, name: "Monet-Orange-Tunic-Dress.jpg" },
+  { src: paradise53, name: "Monet-Orange-Gypsy-Top.jpg" },
+  { src: paradise54, name: "Monet-Orange-Tank-Top.jpg" },
+  { src: paradise55, name: "Monet-Orange-Short-Jacket.jpg" },
+  { src: paradise56, name: "Monet-Orange-Shirt.jpg" },
+  { src: paradise57, name: "Marigold-Aqua-Brown-Short-Kaftan.jpg" },
+  { src: paradise58, name: "Marigold-Aqua-Brown-Long-Shirt-Dress.jpg" },
+  { src: paradise59, name: "Garden-Delight-Long-Kaftan-Coral.jpg" },
+  { src: paradise60, name: "Garden-Delight-Long-Kaftan-Aqua.jpg" },
+  { src: paradise61, name: "Garden-Delight-Shirt.jpg" },
+  { src: paradise62, name: "Tiger-Brown-Short-Kaftan.jpg" },
+  { src: paradise63, name: "Tiger-Brown-Short-Frill-Dress.jpg" },
+];
 
 const sortOptions = [
   { label: "Sort by popularity", value: "popular" },
@@ -18,6 +57,33 @@ const ParadiseCollection = () => {
   const [sortBy, setSortBy] = useState("popular");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const { toast } = useToast();
+
+  const handleDownloadAll = async () => {
+    setDownloading(true);
+    toast({ title: "Downloading", description: "Starting download of 16 images..." });
+    try {
+      for (const img of newImages) {
+        const response = await fetch(img.src);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = img.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        await new Promise((r) => setTimeout(r, 300));
+      }
+      toast({ title: "Done!", description: "All 16 images downloaded." });
+    } catch {
+      toast({ title: "Error", description: "Failed to download some images.", variant: "destructive" });
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(paradiseProducts.map((p) => p.category)));
@@ -62,6 +128,15 @@ const ParadiseCollection = () => {
         <p className="font-body text-sm text-muted-foreground mt-3 tracking-wide">
           {filtered.length} Products
         </p>
+        <Button
+          onClick={handleDownloadAll}
+          disabled={downloading}
+          className="mt-4 gap-2"
+          variant="outline"
+        >
+          <Download size={16} />
+          {downloading ? "Downloading..." : "Download Latest 16 Images"}
+        </Button>
       </div>
 
       {/* Toolbar */}
