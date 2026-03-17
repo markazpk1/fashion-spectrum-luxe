@@ -192,8 +192,6 @@ export type Database = {
           price: number
           sizes: string[] | null
           slug: string
-          stock: number | null
-          sku: string | null
           updated_at: string
         }
         Insert: {
@@ -211,8 +209,6 @@ export type Database = {
           price: number
           sizes?: string[] | null
           slug: string
-          stock?: number | null
-          sku?: string | null
           updated_at?: string
         }
         Update: {
@@ -230,38 +226,6 @@ export type Database = {
           price?: number
           sizes?: string[] | null
           slug?: string
-          stock?: number | null
-          sku?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      categories: {
-        Row: {
-          active: boolean
-          created_at: string
-          id: string
-          name: string
-          slug: string
-          sort_order: number
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name: string
-          slug: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name?: string
-          slug?: string
-          sort_order?: number
           updated_at?: string
         }
         Relationships: []
@@ -281,98 +245,6 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
-        }
-        Relationships: []
-      }
-      payment_methods: {
-        Row: {
-          id: string
-          user_id: string
-          type: string
-          last4: string
-          expiry: string
-          cardholder: string
-          is_default: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          type: string
-          last4: string
-          expiry: string
-          cardholder: string
-          is_default?: boolean
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          type?: string
-          last4?: string
-          expiry?: string
-          cardholder?: string
-          is_default?: boolean
-        }
-        Relationships: []
-      }
-      collections: {
-        Row: {
-          id: string
-          name: string
-          slug: string
-          description: string | null
-          status: "draft" | "published" | "scheduled"
-          featured: boolean
-          start_date: string | null
-          end_date: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          slug: string
-          description?: string | null
-          status?: "draft" | "published" | "scheduled"
-          featured?: boolean
-          start_date?: string | null
-          end_date?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          slug?: string
-          description?: string | null
-          status?: "draft" | "published" | "scheduled"
-          featured?: boolean
-          start_date?: string | null
-          end_date?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      collection_products: {
-        Row: {
-          id: string
-          collection_id: string
-          product_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          collection_id: string
-          product_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          collection_id?: string
-          product_id?: string
-          created_at?: string
         }
         Relationships: []
       }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Search, Filter, Edit2, Trash2, Eye, MoreVertical,
@@ -8,15 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
-import { productService } from "@/lib/productService";
-import { uploadService } from "@/lib/uploadService";
-import { categoryService } from "@/lib/categoryService";
-import { useCollections } from "@/hooks/useCollections";
-import { supabase } from "@/integrations/supabase/client";
-import type { Product } from "@/lib/productService";
+import { newArrivals, Product } from "@/lib/products";
 
 interface AdminProduct extends Product {
   stock: number;
@@ -24,75 +19,22 @@ interface AdminProduct extends Product {
   sku: string;
 }
 
-const initialProducts: AdminProduct[] = [];
+const initialProducts: AdminProduct[] = newArrivals.map((p, i) => ({
+  ...p,
+  stock: Math.floor(Math.random() * 100) + 5,
+  status: i % 5 === 0 ? "Draft" : "Active",
+  sku: `FS-${String(i + 1).padStart(4, "0")}`,
+}));
+
+const categories = ["All", "Kaftans", "Dresses", "Co-Ords", "Tops", "Bottoms", "Capes", "Blazers", "Swimwear", "Jumpsuits"];
 
 const AdminProducts = () => {
-  const [products, setProducts] = useState<AdminProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState(initialProducts);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
-  const [categories, setCategories] = useState<string[]>(["All"]);
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<AdminProduct | null>(null);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const { collections, loading: collectionsLoading } = useCollections();
-  const [form, setForm] = useState<{ 
-    name: string; 
-    price: string; 
-    original_price: string; 
-    category: string; 
-    stock: string; 
-    sku: string; 
-    status: "Active" | "Draft" | "Archived";
-    selectedCollections: string[];
-  }>({ 
-    name: "", 
-    price: "", 
-    original_price: "", 
-    category: "", 
-    stock: "", 
-    sku: "", 
-    status: "Active",
-    selectedCollections: []
-  });
-
-  // Load products and categories from database
-  useEffect(() => {
-    loadProducts();
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
-    try {
-      const cats = await categoryService.getCategories();
-      const catNames = cats.filter(c => c.active).map(c => c.name);
-      setCategories(["All", ...catNames]);
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    }
-  };
-
-  const loadProducts = async () => {
-    try {
-      setLoading(true);
-      const data = await productService.getProducts();
-      // Convert to AdminProduct format
-      const adminProducts: AdminProduct[] = data.map(p => ({
-        ...p,
-        stock: p.stock ?? (p.in_stock ? 100 : 0),
-        status: "Active" as const,
-        sku: p.sku || `FS-${p.id.slice(-4).toUpperCase()}`,
-        original_price: p.original_price
-      }));
-      setProducts(adminProducts);
-    } catch (error) {
-      console.error('Error loading products:', error);
-      toast({ title: "Error loading products", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [form, setForm] = useState<{ name: string; price: string; originalPrice: string; category: string; stock: string; sku: string; status: "Active" | "Draft" | "Archived" }>({ name: "", price: "", originalPrice: "", category: "Kaftans", stock: "", sku: "", status: "Active" });
 
   const filtered = products.filter(p => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
@@ -102,233 +44,52 @@ const AdminProducts = () => {
 
   const openAdd = () => {
     setEditProduct(null);
-    setForm({ 
-      name: "", 
-      price: "", 
-      original_price: "", 
-      category: "", 
-      stock: "", 
-      sku: "", 
-      status: "Active",
-      selectedCollections: []
-    });
-    setUploadedImages([]);
+    setForm({ name: "", price: "", originalPrice: "", category: "Kaftans", stock: "", sku: "", status: "Active" });
     setShowModal(true);
   };
 
   const openEdit = (p: AdminProduct) => {
     setEditProduct(p);
-    // Fetch product collections
-    fetchProductCollections(p.id).then(productCollections => {
-      setForm({
-        name: p.name,
-        price: String(p.price),
-        original_price: p.original_price ? String(p.original_price) : "",
-        category: p.category,
-        stock: String(p.stock),
-        sku: p.sku,
-        status: p.status,
-        selectedCollections: productCollections
-      });
+    setForm({
+      name: p.name,
+      price: String(p.price),
+      originalPrice: p.originalPrice ? String(p.originalPrice) : "",
+      category: p.category,
+      stock: String(p.stock),
+      sku: p.sku,
+      status: p.status,
     });
-    setUploadedImages(p.images || []);
     setShowModal(true);
   };
 
-  // Fetch collections for a specific product
-  const fetchProductCollections = async (productId: string): Promise<string[]> => {
-    try {
-      const { data, error } = await (supabase as any)
-        .from('collection_products')
-        .select('collection_id')
-        .eq('product_id', productId);
-      
-      if (error) throw error;
-      return data?.map((item: any) => item.collection_id) || [];
-    } catch (error) {
-      console.error('Error fetching product collections:', error);
-      return [];
-    }
-  };
-
-  const handleSave = async () => {
-    console.log('🔘 handleSave called');
-    console.log('Form data:', form);
-    console.log('Uploaded images:', uploadedImages);
-    
-    if (!form.name || !form.stock) {
-      console.log('❌ Validation failed - missing required fields');
+  const handleSave = () => {
+    if (!form.name || !form.price || !form.stock) {
       toast({ title: "Please fill required fields", variant: "destructive" });
       return;
     }
-    
-    let productId: string;
-    
     if (editProduct) {
-      console.log('📝 Updating existing product:', editProduct.id);
-      // Update existing product
-      try {
-        const updateData = {
-          name: form.name,
-          price: form.price ? Number(form.price) : 0,
-          original_price: form.original_price ? Number(form.original_price) : null,
-          category: form.category,
-          images: uploadedImages.length > 0 ? uploadedImages : ["/placeholder.svg"],
-          featured: false,
-          in_stock: Number(form.stock) > 0,
-          stock: Number(form.stock),
-          sku: form.sku || `FS-${Date.now().toString(36).toUpperCase().slice(-6)}`,
-        };
-        console.log('Update data:', updateData);
-        
-        await productService.updateProduct(editProduct.id, updateData);
-        productId = editProduct.id;
-        toast({ title: "Product updated!" });
-        loadProducts(); // Reload products
-      } catch (error) {
-        console.error('❌ Error updating product:', error);
-        toast({ title: "Error updating product", variant: "destructive" });
-        return;
-      }
+      setProducts(products.map(p => p.id === editProduct.id ? {
+        ...p, name: form.name, price: Number(form.price),
+        originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
+        category: form.category, stock: Number(form.stock), sku: form.sku, status: form.status,
+      } : p));
+      toast({ title: "Product updated!" });
     } else {
-      console.log('➕ Creating new product');
-      // Create new product
-      try {
-        const createData = {
-          name: form.name,
-          price: form.price ? Number(form.price) : 0,
-          original_price: form.original_price ? Number(form.original_price) : null,
-          category: form.category,
-          images: uploadedImages.length > 0 ? uploadedImages : ["/placeholder.svg"],
-          featured: false,
-          in_stock: Number(form.stock) > 0,
-          stock: Number(form.stock),
-          sku: form.sku || `FS-${Date.now().toString(36).toUpperCase().slice(-6)}`,
-          colors: [],
-          sizes: [],
-          description: "",
-          collection: null,
-          slug: form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-        };
-        console.log('Create data:', createData);
-        
-        const newProduct = await productService.createProduct(createData);
-        productId = newProduct.id;
-        toast({ title: "Product added!" });
-        loadProducts(); // Reload products
-      } catch (error) {
-        console.error('❌ Error creating product:', error);
-        toast({ title: "Error adding product", variant: "destructive" });
-        return;
-      }
+      const newP: AdminProduct = {
+        id: `new-${Date.now()}`, name: form.name, price: Number(form.price),
+        originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
+        image: "/placeholder.svg", category: form.category, stock: Number(form.stock),
+        sku: form.sku || `FS-${String(products.length + 1).padStart(4, "0")}`, status: form.status,
+      };
+      setProducts([newP, ...products]);
+      toast({ title: "Product added!" });
     }
-    
-    // Save collections for the product
-    if (productId && form.selectedCollections.length > 0) {
-      try {
-        // First, remove existing collections for this product
-        await (supabase as any)
-          .from('collection_products')
-          .delete()
-          .eq('product_id', productId);
-        
-        // Then add new collections
-        const collectionProducts = form.selectedCollections.map(collectionId => ({
-          collection_id: collectionId,
-          product_id: productId
-        }));
-        
-        const { error } = await (supabase as any)
-          .from('collection_products')
-          .insert(collectionProducts);
-        
-        if (error) throw error;
-        
-        console.log('✅ Collections saved successfully');
-      } catch (error) {
-        console.error('❌ Error saving collections:', error);
-        toast({ 
-          title: "Product saved but collections failed", 
-          description: "Please try updating collections separately",
-          variant: "destructive" 
-        });
-      }
-    }
-    
     setShowModal(false);
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await productService.deleteProduct(id);
-      toast({ title: "Product deleted" });
-      loadProducts(); // Reload products
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast({ title: "Error deleting product", variant: "destructive" });
-    }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    console.log('Files selected:', files.map(f => f.name));
-    console.log('File details:', files.map(f => ({
-      name: f.name,
-      size: f.size,
-      type: f.type
-    })));
-
-    setUploading(true);
-    try {
-      const uploadedFiles = await uploadService.uploadMultipleImages(files);
-      console.log('Upload successful:', uploadedFiles);
-      setUploadedImages([...uploadedImages, ...uploadedFiles.map(f => f.url)]);
-      toast({ title: `${files.length} image(s) uploaded successfully!` });
-    } catch (error) {
-      console.error('❌ Upload failed:', error);
-      console.error('Full error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'No stack trace',
-        name: error instanceof Error ? error.name : 'Unknown error type'
-      });
-      
-      toast({ 
-        title: "Upload failed", 
-        description: error instanceof Error ? error.message : "Please check console for details",
-        variant: "destructive" 
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setUploadedImages(uploadedImages.filter((_, i) => i !== index));
-  };
-
-  const moveImage = (fromIndex: number, toIndex: number) => {
-    const newImages = [...uploadedImages];
-    const [movedImage] = newImages.splice(fromIndex, 1);
-    newImages.splice(toIndex, 0, movedImage);
-    setUploadedImages(newImages);
-  };
-
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    e.dataTransfer.setData('text/plain', index.toString());
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
-    if (dragIndex !== dropIndex) {
-      moveImage(dragIndex, dropIndex);
-    }
+  const handleDelete = (id: string) => {
+    setProducts(products.filter(p => p.id !== id));
+    toast({ title: "Product deleted" });
   };
 
   const statusBadge = (s: string) => {
@@ -383,6 +144,7 @@ const AdminProducts = () => {
                 <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">SKU</th>
                 <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground">Price</th>
                 <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Stock</th>
+                <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Status</th>
                 <th className="text-right px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground">Actions</th>
               </tr>
             </thead>
@@ -391,7 +153,7 @@ const AdminProducts = () => {
                 <tr key={p.id} className="border-b border-border hover:bg-secondary/20 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <img src={p.images?.[0] || "/placeholder.svg"} alt={p.name} className="w-10 h-10 rounded-lg object-cover bg-secondary" />
+                      <img src={p.image} alt={p.name} className="w-10 h-10 rounded-lg object-cover bg-secondary" />
                       <div>
                         <p className="font-body text-sm font-medium text-foreground truncate max-w-[200px]">{p.name}</p>
                         <p className="font-body text-xs text-muted-foreground">{p.category}</p>
@@ -400,19 +162,19 @@ const AdminProducts = () => {
                   </td>
                   <td className="px-4 py-3 font-body text-sm text-muted-foreground hidden sm:table-cell">{p.sku}</td>
                   <td className="px-4 py-3">
-                    <p className="font-body text-sm font-medium text-foreground">$ {p.price}</p>
-                    {p.original_price && <p className="font-body text-xs text-muted-foreground line-through">$ {p.original_price}</p>}
+                    <p className="font-body text-sm font-medium text-foreground">₨ {p.price.toLocaleString()}</p>
+                    {p.originalPrice && <p className="font-body text-xs text-muted-foreground line-through">₨ {p.originalPrice.toLocaleString()}</p>}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className={`font-body text-sm ${Number(p.stock || 0) < 10 ? "text-red-500 font-medium" : "text-muted-foreground"}`}>
-                      {String(p.stock || 0).replace(/[^\d]/g, '') || '0'}
+                    <span className={`font-body text-sm ${p.stock < 10 ? "text-red-500 font-medium" : "text-muted-foreground"}`}>
+                      {p.stock} {p.stock < 10 && "⚠️"}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-body font-medium ${statusBadge(p.status)}`}>{p.status}</span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <a href={`/product/${p.slug}`} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground" title="View Product">
-                        <Eye size={14} />
-                      </a>
                       <button onClick={() => openEdit(p)} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground"><Edit2 size={14} /></button>
                       <button onClick={() => handleDelete(p.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><Trash2 size={14} /></button>
                     </div>
@@ -422,18 +184,12 @@ const AdminProducts = () => {
             </tbody>
           </table>
         </div>
-      )
-      {loading ? (
-        <div className="text-center py-12">
-          <Package size={40} className="mx-auto text-muted-foreground/30 mb-3 animate-pulse" />
-          <p className="font-body text-sm text-muted-foreground">Loading products...</p>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-12">
-          <Package size={40} className="mx-auto text-muted-foreground/30 mb-3" />
-          <p className="font-body text-sm text-muted-foreground">No products found</p>
-        </div>
-      ) : null}
+        {filtered.length === 0 && (
+          <div className="text-center py-12">
+            <Package size={40} className="mx-auto text-muted-foreground/30 mb-3" />
+            <p className="font-body text-sm text-muted-foreground">No products found</p>
+          </div>
+        )}
       </div>
 
       {/* Add/Edit Modal */}
@@ -456,19 +212,18 @@ const AdminProducts = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="font-body text-xs uppercase text-muted-foreground">Price ($)</Label>
+                  <Label className="font-body text-xs uppercase text-muted-foreground">Price (₨) *</Label>
                   <Input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} className="h-10 bg-card border-border font-body" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="font-body text-xs uppercase text-muted-foreground">Compare Price</Label>
-                  <Input type="number" value={form.original_price} onChange={e => setForm(f => ({ ...f, original_price: e.target.value }))} className="h-10 bg-card border-border font-body" />
+                  <Input type="number" value={form.originalPrice} onChange={e => setForm(f => ({ ...f, originalPrice: e.target.value }))} className="h-10 bg-card border-border font-body" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="font-body text-xs uppercase text-muted-foreground">Category</Label>
                   <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="w-full h-10 rounded-md border border-border bg-card px-3 font-body text-sm text-foreground">
-                    <option value="">Select Category</option>
                     {categories.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -491,99 +246,11 @@ const AdminProducts = () => {
                   </select>
                 </div>
               </div>
-              
-              {/* Collections Selection */}
-              <div className="space-y-1.5">
-                <Label className="font-body text-xs uppercase text-muted-foreground">Collections</Label>
-                {collectionsLoading ? (
-                  <div className="text-sm text-muted-foreground">Loading collections...</div>
-                ) : collections.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">No collections available</div>
-                ) : (
-                  <Select
-                    value={form.selectedCollections.length > 0 ? form.selectedCollections[0] : ""}
-                    onValueChange={(value) => {
-                      setForm(f => ({ ...f, selectedCollections: value ? [value] : [] }));
-                    }}
-                  >
-                    <SelectTrigger className="h-10 bg-card border-border font-body">
-                      <SelectValue placeholder="Select a collection (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {collections.map((collection) => (
-                        <SelectItem key={collection.id} value={collection.id}>
-                          <div className="flex items-center gap-2">
-                            {collection.name}
-                            {collection.featured && (
-                              <span className="w-2 h-2 bg-primary rounded-full"></span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                {form.selectedCollections.length > 0 && (
-                  <div className="text-xs text-muted-foreground">
-                    Selected: {collections.find(c => c.id === form.selectedCollections[0])?.name || 'Collection'}
-                  </div>
-                )}
-              </div>
-              
               <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label htmlFor="image-upload" className="cursor-pointer">
-                  <Upload size={24} className="mx-auto text-muted-foreground mb-2" />
-                  <p className="font-body text-sm text-muted-foreground">Drag & drop images or click to upload</p>
-                  <p className="font-body text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
-                  {uploading && <p className="font-body text-xs text-primary mt-2">Uploading...</p>}
-                </label>
+                <Upload size={24} className="mx-auto text-muted-foreground mb-2" />
+                <p className="font-body text-sm text-muted-foreground">Drag & drop images or click to upload</p>
+                <p className="font-body text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
               </div>
-
-              {/* Uploaded Images Preview */}
-              {uploadedImages.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="font-body text-xs uppercase text-muted-foreground">Uploaded Images</Label>
-                    <span className="font-body text-xs text-muted-foreground">Drag to reorder • First image will be main</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {uploadedImages.map((img, index) => (
-                      <div
-                        key={index}
-                        className={`relative group cursor-move ${
-                          index === 0 ? 'ring-2 ring-primary rounded-lg' : ''
-                        }`}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, index)}
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, index)}
-                      >
-                        <img src={img} alt={`Upload ${index + 1}`} className="w-full h-20 object-cover rounded-lg" />
-                        {index === 0 && (
-                          <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-2 py-1 rounded font-body">
-                            MAIN
-                          </div>
-                        )}
-                        <button
-                          onClick={() => removeImage(index)}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X size={12} />
-                        </button>
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-30 transition-opacity rounded-lg pointer-events-none" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
             <div className="flex gap-3 mt-6">
               <Button variant="outline" className="flex-1 font-body text-xs tracking-wider uppercase" onClick={() => setShowModal(false)}>Cancel</Button>

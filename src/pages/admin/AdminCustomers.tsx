@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Eye, X, Users, Mail, Phone, MapPin, ShoppingCart, Star, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -6,34 +6,37 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Customer {
-  id: string;
-  user_id: string;
+  id: number;
   name: string;
   email: string;
-  phone?: string;
-  city?: string;
+  phone: string;
+  city: string;
   orders: number;
   spent: number;
   joined: string;
   status: "Active" | "Inactive";
 }
 
+const mockCustomers: Customer[] = [
+  { id: 1, name: "Sara Ahmed", email: "sara@email.com", phone: "+92 300 1234567", city: "Karachi", orders: 12, spent: 45600, joined: "Jan 2024", status: "Active" },
+  { id: 2, name: "Fatima Noor", email: "fatima@email.com", phone: "+92 321 9876543", city: "Lahore", orders: 8, spent: 32100, joined: "Mar 2024", status: "Active" },
+  { id: 3, name: "Ali Raza", email: "ali@email.com", phone: "+92 333 4567890", city: "Islamabad", orders: 5, spent: 18900, joined: "Jun 2024", status: "Active" },
+  { id: 4, name: "Zainab Khan", email: "zainab@email.com", phone: "+92 345 6789012", city: "Rawalpindi", orders: 15, spent: 67800, joined: "Dec 2023", status: "Active" },
+  { id: 5, name: "Hassan Malik", email: "hassan@email.com", phone: "+92 312 3456789", city: "Faisalabad", orders: 3, spent: 8900, joined: "Sep 2024", status: "Inactive" },
+  { id: 6, name: "Ayesha Siddiqui", email: "ayesha@email.com", phone: "+92 300 5678901", city: "Multan", orders: 20, spent: 89500, joined: "Nov 2023", status: "Active" },
+  { id: 7, name: "Usman Tariq", email: "usman@email.com", phone: "+92 321 2345678", city: "Peshawar", orders: 7, spent: 24300, joined: "Feb 2024", status: "Active" },
+  { id: 8, name: "Mariam Akhtar", email: "mariam@email.com", phone: "+92 333 8901234", city: "Quetta", orders: 2, spent: 5600, joined: "Oct 2024", status: "Inactive" },
+];
 
 const AdminCustomers = () => {
-  const { isAdmin } = useAdminAuth();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Customer | null>(null);
   const [filter, setFilter] = useState("All");
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const hasFetched = useRef(false);
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
-  const toggleRow = (id: string) => {
+  const toggleRow = (id: number) => {
     setSelectedRows(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
@@ -48,100 +51,6 @@ const AdminCustomers = () => {
       setSelectedRows(new Set(filtered.map(c => c.id)));
     }
   };
-
-  // Fetch customers from database
-  const fetchCustomers = async () => {
-    // Only check if current user is admin, not if customers are admin
-    console.log('🔐 fetchCustomers: isAdmin =', isAdmin, 'hasFetched =', hasFetched.current);
-    
-    if (!isAdmin || hasFetched.current) return;
-      
-    try {
-      setLoading(true);
-      
-      // Fetch all customers (regardless of their roles)
-      console.log('📊 Fetching customers from database...');
-      const { data: customersData, error } = await supabase
-        .from('customers')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      console.log('📋 Raw customers data:', customersData);
-      console.log('❌ Error:', error);
-
-      if (error) throw error;
-
-      // Fetch orders for each customer to calculate orders count and total spent
-      const customersWithStats = await Promise.all(
-        (customersData || []).map(async (customer: any) => {
-          console.log('👤 Processing customer:', customer.full_name, 'user_id:', customer.user_id);
-          
-          const { data: ordersData } = await supabase
-            .from('orders')
-            .select('total')
-            .eq('user_id', customer.user_id);
-
-          const ordersCount = ordersData?.length || 0;
-          const totalSpent = ordersData?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
-
-          // Customer status should be based on orders, not admin role
-          const customerStatus = ordersCount > 0 ? "Active" as const : "Inactive" as const;
-
-          console.log('📦 Customer stats:', { 
-            name: customer.full_name, 
-            ordersCount, 
-            totalSpent, 
-            status: customerStatus 
-          });
-
-          return {
-            id: customer.id,
-            user_id: customer.user_id,
-            name: customer.full_name,
-            email: customer.email,
-            phone: customer.phone,
-            city: customer.city,
-            orders: ordersCount,
-            spent: totalSpent,
-            joined: new Date(customer.created_at).toLocaleDateString('en-US', { 
-              month: 'short', 
-              day: 'numeric', 
-              year: 'numeric' 
-            }),
-            status: customerStatus
-          };
-        })
-      );
-
-      // Filter out admin users from the final list
-      const { data: adminUsers } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
-
-      const adminUserIds = new Set((adminUsers || []).map(au => au.user_id));
-      const nonAdminCustomers = customersWithStats.filter(customer => !adminUserIds.has(customer.user_id));
-
-      console.log('🚫 Filtering out admin users:', adminUserIds);
-      console.log('✅ Final non-admin customers:', nonAdminCustomers);
-
-      setCustomers(nonAdminCustomers);
-      hasFetched.current = true;
-    } catch (error) {
-      console.error('Error fetching customers:', error);
-      toast({ 
-        title: "Failed to load customers", 
-        description: "Please try again later",
-        variant: "destructive" 
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCustomers();
-  }, [isAdmin]);
 
   const exportCSV = (rows: Customer[]) => {
     const headers = ["ID", "Name", "Email", "Phone", "City", "Orders", "Total Spent", "Joined", "Status"];
@@ -159,43 +68,18 @@ const AdminCustomers = () => {
     toast({ title: `${rows.length} customers exported to CSV` });
   };
 
-  const filtered = customers.filter(c => {
+  const filtered = mockCustomers.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filter === "All" || c.status === filter;
     return matchSearch && matchFilter;
   });
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="font-heading text-3xl font-semibold text-foreground">Customers</h1>
-            <p className="font-body text-sm text-muted-foreground">Loading customers...</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-card border border-border rounded-lg p-4 text-center animate-pulse">
-              <div className="w-4 h-4 bg-muted rounded mx-auto mb-2"></div>
-              <div className="w-16 h-6 bg-muted rounded mx-auto mb-1"></div>
-              <div className="w-20 h-3 bg-muted rounded mx-auto"></div>
-            </div>
-          ))}
-        </div>
-        <div className="bg-card border border-border rounded-xl p-8 text-center">
-          <p className="font-body text-muted-foreground">Loading customer data...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="font-heading text-3xl font-semibold text-foreground">Customers</h1>
-          <p className="font-body text-sm text-muted-foreground">{customers.length} registered customers</p>
+          <p className="font-body text-sm text-muted-foreground">{mockCustomers.length} registered customers</p>
         </div>
         <div className="flex gap-2">
           {selectedRows.size > 0 && (
@@ -212,10 +96,10 @@ const AdminCustomers = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total Customers", value: customers.length, icon: Users },
-          { label: "Active", value: customers.filter(c => c.status === "Active").length, icon: Star },
-          { label: "Total Orders", value: customers.reduce((s, c) => s + c.orders, 0), icon: ShoppingCart },
-          { label: "Total Revenue", value: `AUD ${(customers.reduce((s, c) => s + c.spent, 0) / 1000).toFixed(0)}K`, icon: Star },
+          { label: "Total Customers", value: mockCustomers.length, icon: Users },
+          { label: "Active", value: mockCustomers.filter(c => c.status === "Active").length, icon: Star },
+          { label: "Total Orders", value: mockCustomers.reduce((s, c) => s + c.orders, 0), icon: ShoppingCart },
+          { label: "Total Revenue", value: `₨ ${(mockCustomers.reduce((s, c) => s + c.spent, 0) / 1000).toFixed(0)}K`, icon: Star },
         ].map(s => (
           <div key={s.label} className="bg-card border border-border rounded-lg p-4 text-center">
             <s.icon size={18} className="mx-auto text-primary mb-2" />
@@ -242,19 +126,8 @@ const AdminCustomers = () => {
 
       {/* Customers Table */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        {filtered.length === 0 ? (
-          <div className="p-8 text-center">
-            <Users size={48} className="mx-auto text-muted-foreground mb-4" />
-            <p className="font-body text-lg font-medium text-foreground mb-2">No customers found</p>
-            <p className="font-body text-sm text-muted-foreground">
-              {customers.length === 0 
-                ? "No customers have registered yet." 
-                : "No customers match your search criteria."}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        <div className="overflow-x-auto">
+          <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-secondary/30">
                 <th className="text-left px-4 py-3 font-body text-xs uppercase tracking-wider text-muted-foreground w-10">
@@ -284,7 +157,7 @@ const AdminCustomers = () => {
                   </td>
                   <td className="px-4 py-3 font-body text-sm text-muted-foreground hidden md:table-cell">{c.city}</td>
                   <td className="px-4 py-3 font-body text-sm text-foreground">{c.orders}</td>
-                  <td className="px-4 py-3 font-body text-sm font-medium text-foreground hidden sm:table-cell">AUD {c.spent.toLocaleString()}</td>
+                  <td className="px-4 py-3 font-body text-sm font-medium text-foreground hidden sm:table-cell">₨ {c.spent.toLocaleString()}</td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <span className={`text-xs px-2.5 py-1 rounded-full font-body font-medium ${c.status === "Active" ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>{c.status}</span>
                   </td>
@@ -300,8 +173,7 @@ const AdminCustomers = () => {
               ))}
             </tbody>
           </table>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Customer Detail Modal */}
@@ -338,7 +210,7 @@ const AdminCustomers = () => {
                   <p className="font-body text-[10px] text-muted-foreground uppercase">Orders</p>
                 </div>
                 <div>
-                  <p className="font-heading text-lg font-semibold text-foreground">AUD {(selected.spent / 1000).toFixed(1)}K</p>
+                  <p className="font-heading text-lg font-semibold text-foreground">₨ {(selected.spent / 1000).toFixed(1)}K</p>
                   <p className="font-body text-[10px] text-muted-foreground uppercase">Spent</p>
                 </div>
                 <div>

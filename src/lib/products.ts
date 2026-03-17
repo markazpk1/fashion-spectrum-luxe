@@ -1,223 +1,71 @@
-import { productService } from './productService';
+import product1 from "@/assets/product-1.jpg";
+import product2 from "@/assets/product-2.jpg";
+import product3 from "@/assets/product-3.jpg";
+import product4 from "@/assets/product-4.jpg";
+import product5 from "@/assets/product-5.jpg";
+import product6 from "@/assets/product-6.jpg";
+import product7 from "@/assets/product-7.jpg";
+import product8 from "@/assets/product-8.jpg";
+import product9 from "@/assets/product-9.jpg";
+import product10 from "@/assets/product-10.jpg";
+import product11 from "@/assets/product-11.jpg";
+import product12 from "@/assets/product-12.jpg";
+import product13 from "@/assets/product-13.jpg";
+import product14 from "@/assets/product-14.jpg";
+import product15 from "@/assets/product-15.jpg";
+import product16 from "@/assets/product-16.jpg";
 
 export interface Product {
   id: string;
   name: string;
-  price: number;
-  original_price?: number;
+  price?: number;
+  originalPrice?: number;
   image: string;
-  images?: string[];
-  badge?: "New in" | "Sold out";
+  badge?: "New in" | "Sold out" | "Sale";
   category: string;
   style?: string;
   color?: string;
 }
 
-// Get products from database
-export const getProducts = async (): Promise<Product[]> => {
-  try {
-    const products = await productService.getProducts();
-    return products.map(p => ({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      original_price: p.original_price || undefined,
-      image: p.images?.[0] || "/placeholder.svg",
-      images: p.images || [],
-      badge: p.in_stock ? undefined : "Sold out",
-      category: p.category || "",
-      style: undefined, // Not in database schema
-      color: p.colors?.[0], // Get first color from colors array
-    }));
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    return [];
-  }
-};
-
-// Mock data for fallback - Paradise Collection products
 export const newArrivals: Product[] = [
-  {
-    id: "zahara-pink",
-    name: "Zahara Pink Tank Top",
-    price: 89,
-    original_price: 129,
-    image: "/paradise/paradise-1.jpg",
-    images: ["/paradise/paradise-1.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Tank Top",
-    color: "Pink"
-  },
-  {
-    id: "monet-orange-7",
-    name: "Monet Orange Hi-Low Dress",
-    price: 149,
-    original_price: 199,
-    image: "/paradise/paradise-2.jpg",
-    images: ["/paradise/paradise-2.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Hi-Low Dress",
-    color: "Orange"
-  },
-  {
-    id: "monet-orange-6",
-    name: "Monet Orange Wrap Pant",
-    price: 119,
-    original_price: 159,
-    image: "/paradise/paradise-3.jpg",
-    images: ["/paradise/paradise-3.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Wrap Pant",
-    color: "Orange"
-  },
-  {
-    id: "monet-orange-5",
-    name: "Monet Orange Long Box Kaftan",
-    price: 179,
-    original_price: 249,
-    image: "/paradise/paradise-4.jpg",
-    images: ["/paradise/paradise-4.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Long Box Kaftan",
-    color: "Orange"
-  },
-  {
-    id: "monet-orange-4",
-    name: "Monet Orange Tunic Dress",
-    price: 139,
-    original_price: 189,
-    image: "/paradise/paradise-5.jpg",
-    images: ["/paradise/paradise-5.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Tunic Dress",
-    color: "Orange"
-  },
-  {
-    id: "monet-orange-3",
-    name: "Monet Orange Tank Top",
-    price: 99,
-    original_price: 139,
-    image: "/paradise/paradise-6.jpg",
-    images: ["/paradise/paradise-6.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Tank Top",
-    color: "Orange"
-  },
-  {
-    id: "monet-orange-2",
-    name: "Monet Orange Shirt",
-    price: 79,
-    original_price: 109,
-    image: "/paradise/paradise-7.jpg",
-    images: ["/paradise/paradise-7.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Shirt",
-    color: "Orange"
-  },
-  {
-    id: "7166",
-    name: "Monet Orange Short Kaftan",
-    price: 119,
-    original_price: 169,
-    image: "/paradise/paradise-8.jpg",
-    images: ["/paradise/paradise-8.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Short Kaftan",
-    color: "Orange"
-  },
-  {
-    id: "marigold-aqua-brown-2",
-    name: "Marigold Aqua Brown Tank Top",
-    price: 89,
-    original_price: 129,
-    image: "/paradise/paradise-9.jpg",
-    images: ["/paradise/paradise-9.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Tank Top",
-    color: "Aqua Brown"
-  },
-  {
-    id: "marigold-aqua-brown",
-    name: "Marigold Aqua Brown Long Shirt Dress",
-    price: 159,
-    original_price: 219,
-    image: "/paradise/paradise-10.jpg",
-    images: ["/paradise/paradise-10.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Long Shirt Dress",
-    color: "Aqua Brown"
-  },
-  {
-    id: "garden-delight-5",
-    name: "Garden Delight Long Kaftan",
-    price: 189,
-    original_price: 259,
-    image: "/paradise/paradise-11.jpg",
-    images: ["/paradise/paradise-11.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Long Kaftan",
-    color: "Coral"
-  },
-  {
-    id: "garden-delight-4",
-    name: "Garden Delight Long Kaftan",
-    price: 169,
-    original_price: 239,
-    image: "/paradise/paradise-12.jpg",
-    images: ["/paradise/paradise-12.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Long Kaftan",
-    color: "Aqua"
-  },
-  {
-    id: "garden-delight-3",
-    name: "Garden Delight Shirt",
-    price: 99,
-    original_price: 139,
-    image: "/paradise/paradise-13.jpg",
-    images: ["/paradise/paradise-13.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Shirt",
-    color: "Aqua"
-  },
-  {
-    id: "tiger-brown-2",
-    name: "Tiger Brown Short Kaftan",
-    price: 139,
-    original_price: 189,
-    image: "/paradise/paradise-14.jpg",
-    images: ["/paradise/paradise-14.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Short Kaftan",
-    color: "Brown"
-  },
-  {
-    id: "tiger-brown",
-    name: "Tiger Brown Short Frill Dress",
-    price: 149,
-    original_price: 199,
-    image: "/paradise/paradise-15.jpg",
-    images: ["/paradise/paradise-15.jpg"],
-    badge: "New in",
-    category: "Paradise Collection",
-    style: "Short Frill Dress",
-    color: "Brown"
-  }
+  { id: "1", name: "Emerald Empress Medium Kaftan", price: 249, image: product1, badge: "New in", category: "Kaftans" },
+  { id: "2", name: "Aegean Nights Co-Ord Set", price: 399, image: product2, badge: "New in", category: "Co-Ords" },
+  { id: "3", name: "Coral Bloom Kaftan Dress", price: 199, image: product3, badge: "New in", category: "Dresses" },
+  { id: "4", name: "Black Paisley Long Cape", price: 699, image: product4, badge: "New in", category: "Capes" },
+  { id: "5", name: "Ruby Gala Beaded Maxi Dress", price: 499, image: product5, badge: "New in", category: "Dresses" },
+  { id: "6", name: "Turquoise Butterfly Top", price: 199, image: product6, badge: "New in", category: "Tops" },
+  { id: "7", name: "Ivory Gold Embroidered Slip Dress", price: 399, image: product7, badge: "New in", category: "Dresses" },
+  { id: "8", name: "Tropical Tigress Kimono", price: 299, image: product8, badge: "New in", category: "Kaftans" },
+  { id: "9", name: "Sapphire Belted Maxi Dress", price: 449, image: product9, badge: "New in", category: "Dresses" },
+  { id: "10", name: "Rose Embroidered Bell Sleeve Tunic", price: 179, image: product10, badge: "New in", category: "Tops" },
+  { id: "11", name: "Burnt Orange Palazzo Trousers", price: 299, image: product11, badge: "New in", category: "Bottoms" },
+  { id: "12", name: "Emerald Velvet Blazer", price: 549, image: product12, badge: "New in", category: "Blazers" },
+  { id: "13", name: "Pearl & Gold Halter Swimsuit", price: 189, image: product13, badge: "New in", category: "Swimwear" },
+  { id: "14", name: "Teal Baroque Jumpsuit", price: 459, image: product14, badge: "New in", category: "Jumpsuits" },
+  { id: "15", name: "Burgundy Floral Wrap Skirt", price: 249, image: product15, badge: "New in", category: "Bottoms" },
+  { id: "16", name: "Champagne Sequin Evening Gown", price: 799, image: product16, badge: "New in", category: "Dresses" },
 ];
 
-export const saleProducts: Product[] = [];
-export const bestSellers: Product[] = [];
+export const saleProducts: Product[] = [
+  { id: "s1", name: "Postcards Kaftan Dress", price: 149, originalPrice: 199, image: product3, badge: "Sale", category: "Dresses" },
+  { id: "s2", name: "Princess Of Savannah Maxi", price: 349, originalPrice: 499, image: product5, badge: "Sale", category: "Dresses" },
+  { id: "s3", name: "Postcards Medium Kaftan", price: 199, originalPrice: 249, image: product1, badge: "Sale", category: "Kaftans" },
+  { id: "s4", name: "Tropical Nights Slip Dress", price: 239, originalPrice: 299, image: product7, badge: "Sale", category: "Dresses" },
+  { id: "s5", name: "Ocean Breeze Butterfly Top", price: 149, originalPrice: 199, image: product6, badge: "Sale", category: "Tops" },
+  { id: "s6", name: "Midnight Garden Co-Ord Set", price: 299, originalPrice: 399, image: product2, badge: "Sale", category: "Co-Ords" },
+  { id: "s7", name: "Sapphire Dreams Wrap Dress", price: 329, originalPrice: 449, image: product9, badge: "Sale", category: "Dresses" },
+  { id: "s8", name: "Golden Hour Palazzo Pants", price: 199, originalPrice: 299, image: product11, badge: "Sale", category: "Bottoms" },
+  { id: "s9", name: "Rose Garden Bell Top", price: 129, originalPrice: 179, image: product10, badge: "Sale", category: "Tops" },
+  { id: "s10", name: "Baroque Garden Jumpsuit", price: 349, originalPrice: 459, image: product14, badge: "Sale", category: "Jumpsuits" },
+];
+
+export const bestSellers: Product[] = [
+  { id: "b1", name: "Black Paisley Co-Ord Set", price: 399, image: product4, category: "Co-Ords" },
+  { id: "b2", name: "Emerald Empress Blazer", price: 499, image: product1, category: "Blazers" },
+  { id: "b3", name: "Ruby Gala V-Neck Slip Dress", price: 399, image: product5, category: "Dresses" },
+  { id: "b4", name: "Aegean Nights Kaftan Dress", price: 199, image: product2, category: "Dresses" },
+  { id: "b5", name: "Champagne Sequin Evening Gown", price: 799, image: product16, category: "Dresses" },
+  { id: "b6", name: "Teal Baroque Jumpsuit", price: 459, image: product14, category: "Jumpsuits" },
+  { id: "b7", name: "Ivory Gold Embroidered Slip Dress", price: 399, image: product7, category: "Dresses" },
+  { id: "b8", name: "Emerald Velvet Blazer", price: 549, image: product12, category: "Blazers" },
+];

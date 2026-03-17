@@ -1,39 +1,42 @@
-import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Search, Filter, Eye, X, Package, Truck, Clock, CheckCircle,
-  XCircle, ChevronDown, Download, MoreVertical, Trash2, Edit2
+  XCircle, ChevronDown, Download, MoreVertical
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Order {
   id: string;
-  order_number: string;
-  customer_name: string;
-  customer_email: string;
-  customer_phone?: string;
+  customer: string;
+  email: string;
   items: number;
   total: number;
   status: string;
-  payment?: string;
+  payment: string;
   date: string;
-  shipping_address: string;
-  shipping_city?: string;
-  shipping_country?: string;
+  address: string;
 }
 
-const statuses = ["All", "Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled", "Refunded"];
+const mockOrders: Order[] = [
+  { id: "FS-20250227", customer: "Sara Ahmed", email: "sara@email.com", items: 3, total: 1298, status: "Processing", payment: "Credit Card", date: "Feb 27, 2025", address: "Karachi, Sindh" },
+  { id: "FS-20250226", customer: "Fatima Noor", email: "fatima@email.com", items: 1, total: 799, status: "Shipped", payment: "COD", date: "Feb 26, 2025", address: "Lahore, Punjab" },
+  { id: "FS-20250225", customer: "Ali Raza", email: "ali@email.com", items: 4, total: 2150, status: "Delivered", payment: "Credit Card", date: "Feb 25, 2025", address: "Islamabad, ICT" },
+  { id: "FS-20250224", customer: "Zainab Khan", email: "zainab@email.com", items: 2, total: 449, status: "Processing", payment: "Bank Transfer", date: "Feb 24, 2025", address: "Rawalpindi, Punjab" },
+  { id: "FS-20250223", customer: "Hassan Malik", email: "hassan@email.com", items: 5, total: 1899, status: "Shipped", payment: "Credit Card", date: "Feb 23, 2025", address: "Faisalabad, Punjab" },
+  { id: "FS-20250222", customer: "Ayesha Siddiqui", email: "ayesha@email.com", items: 1, total: 499, status: "Cancelled", payment: "Credit Card", date: "Feb 22, 2025", address: "Multan, Punjab" },
+  { id: "FS-20250221", customer: "Usman Tariq", email: "usman@email.com", items: 2, total: 998, status: "Delivered", payment: "COD", date: "Feb 21, 2025", address: "Peshawar, KPK" },
+  { id: "FS-20250220", customer: "Mariam Akhtar", email: "mariam@email.com", items: 3, total: 1650, status: "Refunded", payment: "Credit Card", date: "Feb 20, 2025", address: "Quetta, Balochistan" },
+];
+
+const statuses = ["All", "Processing", "Shipped", "Delivered", "Cancelled", "Refunded"];
 
 const statusColor: Record<string, string> = {
-  Pending: "bg-amber-100 text-amber-700",
-  Confirmed: "bg-blue-100 text-blue-700",
   Processing: "bg-amber-100 text-amber-700",
   Shipped: "bg-blue-100 text-blue-700",
   Delivered: "bg-green-100 text-green-700",
@@ -42,8 +45,6 @@ const statusColor: Record<string, string> = {
 };
 
 const statusIcon: Record<string, React.ElementType> = {
-  Pending: Clock,
-  Confirmed: CheckCircle,
   Processing: Clock,
   Shipped: Truck,
   Delivered: CheckCircle,
@@ -52,86 +53,15 @@ const statusIcon: Record<string, React.ElementType> = {
 };
 
 const AdminOrders = () => {
-  const { user, isAdmin } = useAdminAuth();
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState(mockOrders);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [bulkConfirm, setBulkConfirm] = useState<string | null>(null);
-  const hasFetched = useRef(false);
-
-  // Fetch orders from database
-  const fetchOrders = async () => {
-    if (!isAdmin || hasFetched.current) return;
-      
-    try {
-      setLoading(true);
-        
-      // Fetch orders with order items count
-      const { data: ordersData, error } = await supabase
-        .from('orders')
-          .select(`
-            *,
-            order_items (
-              id
-            )
-          `)
-          .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Transform data to match expected format
-      const transformedOrders: Order[] = (ordersData || []).map((order: any) => ({
-        id: order.id,
-        order_number: order.order_number,
-        customer_name: order.customer_name,
-        customer_email: order.customer_email,
-        customer_phone: order.customer_phone,
-        items: order.order_items?.length || 0,
-        total: Number(order.total) || 0,
-        status: order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'pending',
-        payment: 'COD', // Default payment method since it's not in the schema
-        date: new Date(order.created_at).toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric', 
-          year: 'numeric' 
-        }),
-        shipping_address: order.shipping_address,
-        shipping_city: order.shipping_city,
-        shipping_country: order.shipping_country
-      }));
-
-      // Remove duplicates based on order ID
-      const uniqueOrders = transformedOrders.filter((order, index, self) => 
-        index === self.findIndex((o) => o.id === order.id)
-        );
-
-      setOrders(uniqueOrders);
-      hasFetched.current = true;
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast({ 
-        title: "Failed to load orders", 
-        description: "Please try again later",
-        variant: "destructive" 
-      });
-    } finally {
-      setLoading(false);
-      }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-  }, [isAdmin]);
-
   const filtered = orders.filter(o => {
-    const matchSearch = 
-      o.order_number.toLowerCase().includes(search.toLowerCase()) || 
-      o.customer_name.toLowerCase().includes(search.toLowerCase()) ||
-      o.customer_email.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === "All" || o.status.toLowerCase() === statusFilter.toLowerCase();
+    const matchSearch = o.id.toLowerCase().includes(search.toLowerCase()) || o.customer.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === "All" || o.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
@@ -152,10 +82,10 @@ const AdminOrders = () => {
   };
 
   const exportCSV = (rows: Order[]) => {
-    const headers = ["Order ID", "Order Number", "Customer", "Email", "Items", "Total", "Status", "Payment", "Date", "Address"];
+    const headers = ["Order ID", "Customer", "Email", "Items", "Total", "Status", "Payment", "Date", "Address"];
     const csv = [
       headers.join(","),
-      ...rows.map(o => [o.id, o.order_number, o.customer_name, o.customer_email, o.items, o.total, o.status, o.payment || 'COD', o.date, `"${o.shipping_address}"`].join(","))
+      ...rows.map(o => [o.id, o.customer, o.email, o.items, o.total, o.status, o.payment, o.date, `"${o.address}"`].join(","))
     ].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -167,128 +97,30 @@ const AdminOrders = () => {
     toast({ title: `${rows.length} orders exported to CSV` });
   };
 
-  const updateStatus = async (id: string, newStatus: string) => {
-    console.log('🔄 Updating order status:', { id, newStatus });
-    
-    try {
-      // Check if user is admin first
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('👤 Current user:', user?.email, 'Role:', user?.user_metadata?.role);
-      
-      // Map frontend status to database enum values
-      const statusMapping: Record<string, 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'> = {
-        "Pending": "pending",
-        "Confirmed": "confirmed", 
-        "Processing": "processing",
-        "Shipped": "shipped",
-        "Delivered": "delivered",
-        "Cancelled": "cancelled",
-        "Refunded": "refunded"
-      };
-
-      const dbStatus: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded' = 
-        statusMapping[newStatus] || 
-        (newStatus.toLowerCase() as any);
-      
-      console.log('📤 Mapped status:', newStatus, '→', dbStatus);
-      
-      const { error, data } = await supabase
-        .from('orders')
-        .update({ status: dbStatus })
-        .eq('id', id)
-        .select(); // Add .select() to see what was updated
-      
-      if (error) {
-        console.error('❌ Database update error:', error);
-        throw error;
-      }
-      
-      console.log('✅ Database update successful, updated data:', data);
-      
-      // Update local state with the new status (keep frontend format)
-      setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
-      toast({ title: `Order ${id} marked as ${newStatus}` });
-      
-    } catch (error) {
-      console.error('💥 Catch block error:', error);
-      toast({ 
-        title: "Failed to update status", 
-        description: error.message || "Please try again later",
-        variant: "destructive" 
-      });
-    }
-  };
-
-  const deleteOrder = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      setOrders(orders.filter(o => o.id !== id));
-      toast({ title: "Order deleted successfully" });
-    } catch (error) {
-      console.error('Error deleting order:', error);
-      toast({ 
-        title: "Failed to delete order", 
-        description: "Please try again later",
-        variant: "destructive" 
-      });
-    }
-  };
-
-  const editOrder = (id: string) => {
-    toast({ title: "Edit order feature coming soon!" });
+  const updateStatus = (id: string, newStatus: string) => {
+    setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
+    toast({ title: `Order ${id} marked as ${newStatus}` });
   };
 
   const bulkUpdateStatus = (newStatus: string) => {
     setBulkConfirm(newStatus);
   };
 
-  const confirmBulkUpdate = async () => {
+  const confirmBulkUpdate = () => {
     if (!bulkConfirm) return;
-    
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: bulkConfirm.toLowerCase() as any })
-        .in('id', Array.from(selectedRows));
-      
-      if (error) throw error;
-      
-      setOrders(orders.map(o => selectedRows.has(o.id) ? { ...o, status: bulkConfirm } : o));
-      toast({ title: `${selectedRows.size} orders marked as ${bulkConfirm}` });
-      setSelectedRows(new Set());
-      setBulkConfirm(null);
-    } catch (error) {
-      console.error('Error bulk updating order status:', error);
-      toast({ 
-        title: "Failed to update orders", 
-        description: "Please try again later",
-        variant: "destructive" 
-      });
-    }
+    setOrders(orders.map(o => selectedRows.has(o.id) ? { ...o, status: bulkConfirm } : o));
+    toast({ title: `${selectedRows.size} orders marked as ${bulkConfirm}` });
+    setSelectedRows(new Set());
+    setBulkConfirm(null);
   };
 
   return (
     <div className="space-y-6">
-      {/* Loading State */}
-      {loading ? (
-        <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="font-heading text-xl text-muted-foreground">Loading orders...</p>
-          <p className="text-sm text-muted-foreground font-body mt-1">Please wait while we fetch orders</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-3xl font-semibold text-foreground">Orders</h1>
+          <p className="font-body text-sm text-muted-foreground">{orders.length} total orders</p>
         </div>
-      ) : (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h1 className="font-heading text-3xl font-semibold text-foreground">Orders</h1>
-              <p className="font-body text-sm text-muted-foreground">{orders.length} total orders</p>
-            </div>
         <div className="flex gap-2">
           {selectedRows.size > 0 && (
             <>
@@ -374,16 +206,16 @@ const AdminOrders = () => {
                     <input type="checkbox" checked={selectedRows.has(o.id)} onChange={() => toggleRow(o.id)} className="rounded border-border accent-primary" />
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-body text-sm font-medium text-foreground">{o.order_number}</p>
-                    <p className="font-body text-xs text-muted-foreground sm:hidden">{o.customer_name}</p>
+                    <p className="font-body text-sm font-medium text-foreground">{o.id}</p>
+                    <p className="font-body text-xs text-muted-foreground sm:hidden">{o.customer}</p>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <p className="font-body text-sm text-foreground">{o.customer_name}</p>
-                    <p className="font-body text-xs text-muted-foreground">{o.customer_email}</p>
+                    <p className="font-body text-sm text-foreground">{o.customer}</p>
+                    <p className="font-body text-xs text-muted-foreground">{o.email}</p>
                   </td>
                   <td className="px-4 py-3 font-body text-sm text-muted-foreground hidden md:table-cell">{o.date}</td>
                   <td className="px-4 py-3">
-                    <p className="font-body text-sm font-medium text-foreground">${o.total.toLocaleString()}</p>
+                    <p className="font-body text-sm font-medium text-foreground">₨ {o.total.toLocaleString()}</p>
                     <p className="font-body text-xs text-muted-foreground">{o.items} items</p>
                   </td>
                   <td className="px-4 py-3 font-body text-sm text-muted-foreground hidden md:table-cell">{o.payment}</td>
@@ -397,26 +229,9 @@ const AdminOrders = () => {
                     </select>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end">
                       <button onClick={() => setSelectedOrder(o)} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground">
                         <Eye size={14} />
-                      </button>
-                      <button 
-                        onClick={() => {
-                          if (window.confirm('Are you sure you want to delete this order?')) {
-                            deleteOrder(o.id);
-                            if (selectedRows.has(o.id)) {
-                              setSelectedRows(prev => {
-                                const next = new Set(prev);
-                                next.delete(o.id);
-                                return next;
-                              });
-                            }
-                          }
-                        }} 
-                        className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
@@ -427,6 +242,7 @@ const AdminOrders = () => {
         </div>
       </div>
 
+      {/* Order Detail Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black/60" onClick={() => setSelectedOrder(null)} />
@@ -436,19 +252,18 @@ const AdminOrders = () => {
             className="relative z-50 bg-background border border-border rounded-xl shadow-xl w-full max-w-md mx-4 p-6"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading text-xl font-semibold text-foreground">Order {selectedOrder.order_number}</h3>
+              <h3 className="font-heading text-xl font-semibold text-foreground">Order {selectedOrder.id}</h3>
               <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
             </div>
             <div className="space-y-3">
               {[
-                ["Customer", selectedOrder.customer_name],
-                ["Email", selectedOrder.customer_email],
-                ["Phone", selectedOrder.customer_phone || 'N/A'],
+                ["Customer", selectedOrder.customer],
+                ["Email", selectedOrder.email],
                 ["Date", selectedOrder.date],
                 ["Items", `${selectedOrder.items} items`],
                 ["Total", `₨ ${selectedOrder.total.toLocaleString()}`],
-                ["Payment", selectedOrder.payment || 'COD'],
-                ["Address", selectedOrder.shipping_address],
+                ["Payment", selectedOrder.payment],
+                ["Address", selectedOrder.address],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between">
                   <span className="font-body text-sm text-muted-foreground">{label}</span>
@@ -482,47 +297,6 @@ const AdminOrders = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-        </>
-      )}
-    {/* Order Detail Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/60" onClick={() => setSelectedOrder(null)} />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative z-50 bg-background border border-border rounded-xl shadow-xl w-full max-w-md mx-4 p-6"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading text-xl font-semibold text-foreground">Order {selectedOrder.order_number}</h3>
-              <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
-            </div>
-            <div className="space-y-3">
-              {[
-                ["Customer", selectedOrder.customer_name],
-                ["Email", selectedOrder.customer_email],
-                ["Phone", selectedOrder.customer_phone],
-                ["Date", selectedOrder.date],
-                ["Items", `${selectedOrder.items} items`],
-                ["Total", `₨ ${selectedOrder.total.toLocaleString()}`],
-                ["Payment", selectedOrder.payment],
-                ["Address", selectedOrder.shipping_address],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between">
-                  <span className="font-body text-sm text-muted-foreground">{label}</span>
-                  <span className="font-body text-sm font-medium text-foreground">{value}</span>
-                </div>
-              ))}
-              <Separator />
-              <div className="flex justify-between items-center">
-                <span className="font-body text-sm text-muted-foreground">Status</span>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-body font-medium ${statusColor[selectedOrder.status]}`}>{selectedOrder.status}</span>
-              </div>
-            </div>
-            <Button className="w-full mt-5 font-body text-xs tracking-wider uppercase" onClick={() => setSelectedOrder(null)}>Close</Button>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 };

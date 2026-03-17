@@ -1,13 +1,11 @@
 import { useState, useRef } from "react";
-import { Heart, Search, ShoppingBag, Menu, X, User, LogOut, Layers } from "lucide-react";
+import { Heart, Search, ShoppingBag, Menu, X, User, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCollections } from "@/hooks/useCollections";
 import SearchOverlay from "./SearchOverlay";
-import Logo from "./Logo";
 
 const whereToBuyLinks = [
   { label: "Ambia collections", url: "https://www.ambia.com.au/" },
@@ -32,7 +30,6 @@ const Navbar = () => {
   const { openCart, totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const { user, signOut } = useAuth();
-  const { collections, loading: collectionsLoading } = useCollections();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -50,11 +47,8 @@ const Navbar = () => {
         {/* Desktop Layout */}
         <div className="hidden lg:flex items-center px-6 xl:px-10 py-3">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 shrink-0">
-            <Logo type="header" size="lg" />
-            <span className="font-heading text-xl xl:text-2xl font-semibold tracking-wider text-primary uppercase">
-              FashionSpectrum
-            </span>
+          <Link to="/" className="font-heading text-xl xl:text-2xl font-semibold tracking-wider text-primary uppercase shrink-0">
+            FashionSpectrum
           </Link>
 
           {/* Nav Links */}
@@ -83,62 +77,19 @@ const Navbar = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute top-full left-0 mt-2 min-w-[280px] bg-foreground rounded-md shadow-lg py-3 z-50"
+                        className="absolute top-full left-0 mt-2 min-w-[200px] bg-foreground rounded-md shadow-lg py-3 z-50"
                       >
-                        {/* Collections Section */}
-                        <div className="border-b border-foreground/20 pb-2 mb-2">
-                          <div className="px-5 py-1 text-xs font-body text-background/60 uppercase tracking-wider">
-                            Collections
-                          </div>
-                          {collectionsLoading ? (
-                            <div className="px-5 py-2 text-sm font-body text-background/60">
-                              Loading collections...
-                            </div>
-                          ) : collections.length === 0 ? (
-                            <div className="px-5 py-2 text-sm font-body text-background/60">
-                              No collections available
-                            </div>
-                          ) : (
-                            collections.map((collection) => (
-                              <Link
-                                key={collection.id}
-                                to={`/collection/${collection.slug}`}
-                                className="block px-5 py-2 text-sm font-body text-background hover:text-primary-foreground/80 transition-colors"
-                              >
-                                <div className="flex items-center gap-2">
-                                  {collection.featured && (
-                                    <span className="w-2 h-2 bg-primary-foreground rounded-full"></span>
-                                  )}
-                                  <span>{collection.name}</span>
-                                </div>
-                              </Link>
-                            ))
-                          )}
-                          <Link
-                            to="/collections"
-                            className="block px-5 py-2 text-sm font-body text-background/80 hover:text-primary-foreground transition-colors border-t border-foreground/10 pt-2"
+                        {whereToBuyLinks.map((item) => (
+                          <a
+                            key={item.label}
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block px-5 py-2 text-sm font-body text-background hover:text-primary-foreground/80 transition-colors"
                           >
-                            View All Collections →
-                          </Link>
-                        </div>
-
-                        {/* Where to Buy Section */}
-                        <div>
-                          <div className="px-5 py-1 text-xs font-body text-background/60 uppercase tracking-wider">
-                            Where to Buy
-                          </div>
-                          {whereToBuyLinks.map((item) => (
-                            <a
-                              key={item.label}
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block px-5 py-2 text-sm font-body text-background hover:text-primary-foreground/80 transition-colors"
-                            >
-                              {item.label}
-                            </a>
-                          ))}
-                        </div>
+                            {item.label}
+                          </a>
+                        ))}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -231,11 +182,8 @@ const Navbar = () => {
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
 
-          <Link to="/" className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
-            <Logo type="header" size="md" />
-            <span className="font-heading text-lg sm:text-xl font-semibold tracking-wider text-primary uppercase">
-              FashionSpectrum
-            </span>
+          <Link to="/" className="font-heading text-lg sm:text-xl font-semibold tracking-wider text-primary uppercase absolute left-1/2 -translate-x-1/2">
+            FashionSpectrum
           </Link>
 
           <div className="flex items-center gap-3 z-10">
@@ -294,61 +242,18 @@ const Navbar = () => {
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden pl-4 mt-2 flex flex-col gap-2"
                           >
-                            {/* Collections Section */}
-                            <div className="border-b border-border pb-2 mb-2">
-                              <div className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-2">
-                                Collections
-                              </div>
-                              {collectionsLoading ? (
-                                <div className="font-body text-sm tracking-[0.1em] text-muted-foreground">
-                                  Loading collections...
-                                </div>
-                              ) : collections.length === 0 ? (
-                                <div className="font-body text-sm tracking-[0.1em] text-muted-foreground">
-                                  No collections available
-                                </div>
-                              ) : (
-                                collections.map((collection) => (
-                                  <Link
-                                    key={collection.id}
-                                    to={`/collection/${collection.slug}`}
-                                    onClick={() => setMobileOpen(false)}
-                                    className="font-body text-sm tracking-[0.1em] text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
-                                  >
-                                    {collection.featured && (
-                                      <span className="w-2 h-2 bg-primary rounded-full"></span>
-                                    )}
-                                    {collection.name}
-                                  </Link>
-                                ))
-                              )}
-                              <Link
-                                to="/collections"
+                            {whereToBuyLinks.map((item) => (
+                              <a
+                                key={item.label}
+                                href={item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 onClick={() => setMobileOpen(false)}
-                                className="font-body text-sm tracking-[0.1em] text-muted-foreground hover:text-primary transition-colors border-t border-border pt-2 mt-2"
+                                className="font-body text-sm tracking-[0.1em] text-muted-foreground hover:text-primary transition-colors"
                               >
-                                View All Collections →
-                              </Link>
-                            </div>
-
-                            {/* Where to Buy Section */}
-                            <div>
-                              <div className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-2">
-                                Where to Buy
-                              </div>
-                              {whereToBuyLinks.map((item) => (
-                                <a
-                                  key={item.label}
-                                  href={item.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={() => setMobileOpen(false)}
-                                  className="font-body text-sm tracking-[0.1em] text-muted-foreground hover:text-primary transition-colors"
-                                >
-                                  {item.label}
-                                </a>
-                              ))}
-                            </div>
+                                {item.label}
+                              </a>
+                            ))}
                           </motion.div>
                         )}
                       </AnimatePresence>

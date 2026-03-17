@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, Edit2, Eye, Plus, Trash2, Globe, GlobeLock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { pagesService, type PageListItem } from "@/lib/pagesService";
 
 interface PageItem {
   id: number;
@@ -43,134 +42,44 @@ const today = () => {
 
 const AdminPages = () => {
   const navigate = useNavigate();
-  const [pages, setPages] = useState<PageListItem[]>([]);
-  const [editPage, setEditPage] = useState<PageListItem | null>(null);
+  const [pages, setPages] = useState<PageItem[]>(initialPages);
+  const [editPage, setEditPage] = useState<PageItem | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [newPage, setNewPage] = useState({ name: "", path: "", status: "draft" as 'draft' | 'published' });
-  const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [newPage, setNewPage] = useState({ name: "", path: "", status: "Draft" as const });
   const { toast } = useToast();
 
-  // Fetch pages from service
-  useEffect(() => {
-    const fetchPages = async () => {
-      try {
-        setLoading(true);
-        const pagesData = await pagesService.getAllPages();
-        setPages(pagesData);
-      } catch (error) {
-        console.error('Error fetching pages:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load pages",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPages();
-  }, [toast]);
-
-  const handleAdd = async () => {
+  const handleAdd = () => {
     if (!newPage.name.trim() || !newPage.path.trim()) {
       toast({ title: "Name and path are required", variant: "destructive" });
       return;
     }
-
-    try {
-      const slug = pagesService.generateSlug(newPage.name);
-      const createdPage = await pagesService.createPage({
-        name: newPage.name,
-        slug,
-        path: newPage.path,
-        content: '<h1>' + newPage.name + '</h1><p>Add your content here.</p>',
-        meta_title: newPage.name + ' - Fashion Spectrum Luxe',
-        meta_description: 'Description for ' + newPage.name,
-        status: newPage.status,
-        is_system: false,
-      });
-
-      if (createdPage) {
-        const updatedPages = await pagesService.getAllPages();
-        setPages(updatedPages);
-        setNewPage({ name: "", path: "", status: "draft" });
-        setIsAddOpen(false);
-        toast({ title: `"${newPage.name}" page created` });
-      }
-    } catch (error) {
-      console.error('Error creating page:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create page",
-        variant: "destructive",
-      });
-    }
+    const id = Math.max(0, ...pages.map(p => p.id)) + 1;
+    setPages([...pages, { ...newPage, id, status: newPage.status as "Published" | "Draft", updated: today() }]);
+    setNewPage({ name: "", path: "", status: "Draft" });
+    setIsAddOpen(false);
+    toast({ title: `"${newPage.name}" page created` });
   };
 
-  const handleEdit = async () => {
+  const handleEdit = () => {
     if (!editPage) return;
-
-    try {
-      const updatedPage = await pagesService.updatePage(editPage.id, {
-        name: editPage.name,
-        path: editPage.path,
-        status: editPage.status,
-      });
-
-      if (updatedPage) {
-        const updatedPages = await pagesService.getAllPages();
-        setPages(updatedPages);
-        toast({ title: `"${editPage.name}" updated` });
-        setEditPage(null);
-      }
-    } catch (error) {
-      console.error('Error updating page:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update page",
-        variant: "destructive",
-      });
-    }
+    setPages(pages.map(p => p.id === editPage.id ? { ...editPage, updated: today() } : p));
+    toast({ title: `"${editPage.name}" updated` });
+    setEditPage(null);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (deleteId === null) return;
-
-    try {
-      const success = await pagesService.deletePage(deleteId);
-      if (success) {
-        const updatedPages = await pagesService.getAllPages();
-        setPages(updatedPages);
-        setDeleteId(null);
-        toast({ title: `"${pages.find(p => p.id === deleteId)?.name}" deleted` });
-      }
-    } catch (error) {
-      console.error('Error deleting page:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete page",
-        variant: "destructive",
-      });
-    }
+    const name = pages.find(p => p.id === deleteId)?.name;
+    setPages(pages.filter(p => p.id !== deleteId));
+    setDeleteId(null);
+    toast({ title: `"${name}" deleted` });
   };
 
-  const toggleStatus = async (id: string) => {
-    try {
-      const updatedPage = await pagesService.togglePageStatus(id);
-      if (updatedPage) {
-        const updatedPages = await pagesService.getAllPages();
-        setPages(updatedPages);
-      }
-    } catch (error) {
-      console.error('Error toggling page status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update page status",
-        variant: "destructive",
-      });
-    }
+  const toggleStatus = (id: number) => {
+    setPages(pages.map(p =>
+      p.id === id ? { ...p, status: p.status === "Published" ? "Draft" : "Published", updated: today() } : p
+    ));
   };
 
   return (
@@ -197,56 +106,45 @@ const AdminPages = () => {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                  Loading pages...
-                </td>
-              </tr>
-            ) : pages.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                  No pages yet
-                </td>
-              </tr>
-            ) : (
-              pages.map(p => (
-                <tr key={p.id} className="border-b border-border hover:bg-secondary/20">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <FileText size={14} className="text-primary" />
-                      </div>
-                      <span className="font-body text-sm font-medium text-foreground">{p.name}</span>
+            {pages.map(p => (
+              <tr key={p.id} className="border-b border-border hover:bg-secondary/20">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <FileText size={14} className="text-primary" />
                     </div>
-                  </td>
-                  <td className="px-4 py-3 font-body text-sm text-muted-foreground hidden sm:table-cell">{p.path}</td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => toggleStatus(p.id)}
-                      className={`text-xs px-2.5 py-1 rounded-full font-body font-medium cursor-pointer transition-colors ${
-                        p.status === "published" ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                      }`}
-                    >
-                      {p.status === "published" ? "Published" : "Draft"}
+                    <span className="font-body text-sm font-medium text-foreground">{p.name}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 font-body text-sm text-muted-foreground hidden sm:table-cell">{p.path}</td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => toggleStatus(p.id)}
+                    className={`text-xs px-2.5 py-1 rounded-full font-body font-medium cursor-pointer transition-colors ${
+                      p.status === "Published" ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                    }`}
+                  >
+                    {p.status}
+                  </button>
+                </td>
+                <td className="px-4 py-3 font-body text-sm text-muted-foreground hidden md:table-cell">{p.updated}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-1">
+                    <a href={p.path} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground">
+                      <Eye size={14} />
+                    </a>
+                    <button onClick={() => navigate(`/admin/pages/edit/${p.path === "/" ? "home" : p.path.replace(/^\//, "")}`)} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground">
+                      <Edit2 size={14} />
                     </button>
-                  </td>
-                  <td className="px-4 py-3 font-body text-sm text-muted-foreground hidden md:table-cell">{p.updated_at}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <a href={p.path} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground">
-                        <Eye size={14} />
-                      </a>
-                      <button onClick={() => navigate(`/admin/pages/edit/${p.path === "/" ? "home" : p.path.replace(/^\//, "")}`)} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground">
-                        <Edit2 size={14} />
-                      </button>
-                      <button onClick={() => setDeleteId(p.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                    <button onClick={() => setDeleteId(p.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {pages.length === 0 && (
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground font-body text-sm">No pages yet</td></tr>
             )}
           </tbody>
         </table>
@@ -270,11 +168,11 @@ const AdminPages = () => {
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={newPage.status} onValueChange={v => setNewPage({ ...newPage, status: v as 'draft' | 'published' })}>
+              <Select value={newPage.status} onValueChange={v => setNewPage({ ...newPage, status: v as any })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="Draft">Draft</SelectItem>
+                  <SelectItem value="Published">Published</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -305,11 +203,11 @@ const AdminPages = () => {
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={editPage.status} onValueChange={v => setEditPage({ ...editPage, status: v as 'draft' | 'published' })}>
+                <Select value={editPage.status} onValueChange={v => setEditPage({ ...editPage, status: v as any })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="Draft">Draft</SelectItem>
+                    <SelectItem value="Published">Published</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

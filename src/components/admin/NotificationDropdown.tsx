@@ -15,8 +15,58 @@ import {
   showBrowserNotification,
 } from "@/lib/notificationSound";
 import { useToast } from "@/hooks/use-toast";
-import { notificationService, type Notification } from "@/lib/notificationService";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  type: "order" | "customer" | "inventory" | "alert";
+}
+
+const initialNotifications: Notification[] = [
+  {
+    id: "1",
+    title: "New Order #1042",
+    message: "Sarah Johnson placed an order for ₦85,000",
+    time: "2 min ago",
+    read: false,
+    type: "order",
+  },
+  {
+    id: "2",
+    title: "Low Stock Alert",
+    message: "Royal Blue Agbada is running low (3 left)",
+    time: "15 min ago",
+    read: false,
+    type: "inventory",
+  },
+  {
+    id: "3",
+    title: "New Customer",
+    message: "Amara Obi just created an account",
+    time: "1 hour ago",
+    read: false,
+    type: "customer",
+  },
+  {
+    id: "4",
+    title: "Payment Failed",
+    message: "Order #1039 payment was declined",
+    time: "3 hours ago",
+    read: true,
+    type: "alert",
+  },
+  {
+    id: "5",
+    title: "Order Delivered",
+    message: "Order #1035 was delivered successfully",
+    time: "5 hours ago",
+    read: true,
+    type: "order",
+  },
+];
 
 const typeIcons = {
   order: ShoppingCart,
@@ -34,87 +84,13 @@ const typeColors = {
 
 const NotificationDropdown = () => {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const saved = localStorage.getItem("admin_notification_sound");
     return saved !== "false";
   });
   const [pushEnabled, setPushEnabled] = useState(false);
   const { toast } = useToast();
-  const { isAdmin, loading: authLoading } = useAdminAuth();
-
-  useEffect(() => {
-    if (!authLoading && isAdmin) {
-      fetchNotifications();
-      subscribeToNotifications();
-    } else if (!authLoading && !isAdmin) {
-      setLoading(false);
-    }
-  }, [authLoading, isAdmin]);
-
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      const data = await notificationService.getNotifications();
-      setNotifications(data.slice(0, 10)); // Show only latest 10 in dropdown
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const subscribeToNotifications = () => {
-    const subscription = notificationService.subscribeToNotifications((payload) => {
-      if (payload.eventType === 'INSERT') {
-        const newNotification = payload.new as Notification;
-        setNotifications(prev => [newNotification, ...prev.slice(0, 9)]); // Keep only latest 10
-        // Play sound for new notifications
-        if (soundEnabled) {
-          playNotificationSound(newNotification.type === 'alert' ? 'critical' : 'info');
-        }
-        // Show browser notification
-        if (pushEnabled) {
-          showBrowserNotification(
-            `⚠️ ${newNotification.title}`,
-            newNotification.message
-          );
-        }
-      } else if (payload.eventType === 'UPDATE') {
-        const updatedNotification = payload.new as Notification;
-        setNotifications(prev => 
-          prev.map(n => n.id === updatedNotification.id ? updatedNotification : n)
-        );
-      } else if (payload.eventType === 'DELETE') {
-        const deletedId = payload.old.id;
-        setNotifications(prev => prev.filter(n => n.id !== deletedId));
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins} min ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-    });
-  };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -130,33 +106,56 @@ const NotificationDropdown = () => {
     localStorage.setItem("admin_notification_sound", String(soundEnabled));
   }, [soundEnabled]);
 
-  const markAsRead = async (id: string) => {
-    try {
-      await notificationService.markAsRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-      );
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error);
-    }
+  // Simulate incoming critical notification (demo every 30s)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const criticalAlerts = [
+        { title: "Payment Failed", message: "Order #1050 payment was declined", type: "alert" as const },
+        { title: "Refund Requested", message: "Customer requested refund for Order #1048", type: "alert" as const },
+        { title: "Critical Stock", message: "Gold Kaftan is out of stock", type: "inventory" as const },
+      ];
+
+      const randomAlert = criticalAlerts[Math.floor(Math.random() * criticalAlerts.length)];
+      const newNotification: Notification = {
+        id: `live-${Date.now()}`,
+        title: randomAlert.title,
+        message: randomAlert.message,
+        time: "Just now",
+        read: false,
+        type: randomAlert.type,
+      };
+
+      setNotifications((prev) => [newNotification, ...prev]);
+
+      // Play sound for critical alerts
+      if (soundEnabled) {
+        playNotificationSound(randomAlert.type === "alert" ? "critical" : "info");
+      }
+
+      // Show browser notification
+      if (pushEnabled) {
+        showBrowserNotification(
+          `⚠️ ${randomAlert.title}`,
+          randomAlert.message
+        );
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [soundEnabled, pushEnabled]);
+
+  const markAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
   };
 
-  const markAllRead = async () => {
-    try {
-      await notificationService.markAllAsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
-    }
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
-  const removeNotification = async (id: string) => {
-    try {
-      await notificationService.deleteNotification(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-    } catch (error) {
-      console.error('Failed to delete notification:', error);
-    }
+  const removeNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
   const toggleSound = useCallback(() => {
@@ -190,22 +189,22 @@ const NotificationDropdown = () => {
     }
   }, [pushEnabled, toast]);
 
-  const testCriticalAlert = useCallback(async () => {
-    try {
-      const testNotif = await notificationService.createNotification({
-        title: "Payment Failed",
-        message: "Test alert — Order #9999 payment was declined",
-        type: "alert"
-      });
-      // The real-time subscription will handle adding it to the list
-      if (soundEnabled) {
-        playNotificationSound("critical");
-      }
-      if (pushEnabled) {
-        showBrowserNotification("⚠️ Payment Failed", testNotif.message);
-      }
-    } catch (error) {
-      console.error('Failed to create test notification:', error);
+  const testCriticalAlert = useCallback(() => {
+    const testNotif: Notification = {
+      id: `test-${Date.now()}`,
+      title: "Payment Failed",
+      message: "Test alert — Order #9999 payment was declined",
+      time: "Just now",
+      read: false,
+      type: "alert",
+    };
+    setNotifications((prev) => [testNotif, ...prev]);
+
+    if (soundEnabled) {
+      playNotificationSound("critical");
+    }
+    if (pushEnabled) {
+      showBrowserNotification("⚠️ Payment Failed", testNotif.message);
     }
   }, [soundEnabled, pushEnabled]);
 
@@ -326,7 +325,7 @@ const NotificationDropdown = () => {
                       {notification.message}
                     </p>
                     <p className="text-[10px] font-body text-muted-foreground/70 mt-1">
-                      {formatTime(notification.created_at)}
+                      {notification.time}
                     </p>
                   </div>
                   <button

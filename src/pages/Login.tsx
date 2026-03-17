@@ -31,19 +31,12 @@ const Login = () => {
     }
     setLoading(true);
     try {
-      console.log("Attempting login with:", email);
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        console.error("Login error:", error);
-        toast({ title: "Login failed", description: error.message || "Invalid credentials", variant: "destructive" });
-      } else {
-        console.log("Login successful for user:", email);
-        toast({ title: "Login successful!", description: "Welcome back!" });
-        navigate("/account");
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast({ title: "Login successful!", description: "Welcome back!" });
+      navigate("/account");
     } catch (err: any) {
-      console.error("Login exception:", err);
-      toast({ title: "Login failed", description: "An error occurred. Please try again.", variant: "destructive" });
+      toast({ title: "Login failed", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }

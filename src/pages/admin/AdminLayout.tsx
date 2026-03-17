@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Tag, Star,
   Settings, BarChart3, ChevronLeft, ChevronRight, LogOut, Bell,
   Search, Menu, X, FileText, Truck, MessageSquare, Image, Percent,
-  Server, Mail, Megaphone, ImageIcon
+  Server, Mail, Megaphone
 } from "lucide-react";
 import NotificationDropdown from "@/components/admin/NotificationDropdown";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
-import Logo from "@/components/Logo";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/admin" },
@@ -22,6 +20,7 @@ const navItems = [
   { label: "Customers", icon: Users, path: "/admin/customers" },
   { label: "Analytics", icon: BarChart3, path: "/admin/analytics" },
   { label: "Coupons", icon: Percent, path: "/admin/coupons" },
+  { label: "Reviews", icon: Star, path: "/admin/reviews" },
   { label: "Categories", icon: Tag, path: "/admin/categories" },
   { label: "Collections", icon: FileText, path: "/admin/collections" },
   { label: "Inventory", icon: Truck, path: "/admin/inventory" },
@@ -29,6 +28,9 @@ const navItems = [
   { label: "Media", icon: Image, path: "/admin/media" },
   { label: "Messages", icon: MessageSquare, path: "/admin/messages" },
   { label: "Notifications", icon: Bell, path: "/admin/notifications" },
+  { label: "SMTP Settings", icon: Server, path: "/admin/smtp-settings" },
+  { label: "Email Templates", icon: Mail, path: "/admin/email-templates" },
+  { label: "Email Marketing", icon: Megaphone, path: "/admin/email-marketing" },
   { label: "Settings", icon: Settings, path: "/admin/settings" },
 ];
 
@@ -37,31 +39,6 @@ const AdminLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAdmin, loading } = useAdminAuth();
-
-  // Redirect non-admin users
-  useEffect(() => {
-    if (!loading && !isAdmin) {
-      navigate('/admin/login', { replace: true });
-    }
-  }, [loading, isAdmin, navigate]);
-
-  // Show loading state while checking auth
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="font-body text-muted-foreground">Verifying admin access...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if not admin
-  if (!isAdmin) {
-    return null;
-  }
 
   const isActive = (path: string) => {
     if (path === "/admin") return location.pathname === "/admin";
@@ -72,11 +49,13 @@ const AdminLayout = () => {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-4 flex items-center gap-3">
-        <Logo type="admin" size="md" />
+        <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-heading font-bold text-lg flex-shrink-0">
+          FS
+        </div>
         {!collapsed && (
           <div>
-            <div className="font-heading text-lg font-semibold text-foreground">Admin Panel</div>
-            <div className="font-body text-xs text-muted-foreground">Fashion Spectrum</div>
+            <h1 className="font-heading text-lg font-semibold text-foreground leading-none">Fashion Spectrum</h1>
+            <p className="text-[10px] font-body text-muted-foreground uppercase tracking-widest">Admin Panel</p>
           </div>
         )}
       </div>

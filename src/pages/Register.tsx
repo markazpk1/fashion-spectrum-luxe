@@ -40,7 +40,7 @@ const Register = () => {
     }
     setLoading(true);
     try {
-      const { data: authData, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -49,23 +49,6 @@ const Register = () => {
         },
       });
       if (error) throw error;
-
-      // Create customer profile
-      if (authData.user) {
-        const { error: customerError } = await supabase
-          .from('customers')
-          .insert({
-            user_id: authData.user.id,
-            full_name: name,
-            email: email,
-          });
-
-        if (customerError) {
-          console.error('Error creating customer profile:', customerError);
-          // Don't fail registration if customer profile creation fails
-        }
-      }
-
       toast({ title: "Account created!", description: "You can now sign in." });
       navigate("/account");
     } catch (err: any) {

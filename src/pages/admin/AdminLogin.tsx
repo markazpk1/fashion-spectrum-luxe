@@ -26,32 +26,26 @@ const AdminLogin = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      const { useAdminAuth: _ } = await import("@/hooks/useAdminAuth");
       const { supabase } = await import("@/integrations/supabase/client");
-      
-      // Try to sign in with admin credentials
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        // If email not confirmed, still try to proceed
-        if (error.message.includes('Email not confirmed')) {
-          console.log('Email not confirmed but proceeding...');
-          // Continue with the login process even if email not confirmed
-        } else {
-          throw error;
-        }
-      }
+      if (error) throw error;
 
-      // Get user session
+      // Check admin role
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Authentication failed");
 
-      // Check admin role from user metadata
-      const isAdminUser = user.user_metadata?.role === 'admin';
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
 
-      if (!isAdminUser) {
+      if (!roleData) {
         await supabase.auth.signOut();
         toast({ title: "Access denied", description: "You don't have admin privileges.", variant: "destructive" });
       } else {
-        toast({ title: "Welcome back!", description: "Admin access granted." });
         navigate("/admin");
       }
     } catch (err: any) {

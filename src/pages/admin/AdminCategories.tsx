@@ -1,86 +1,52 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Edit2, Trash2, X, Tag } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Tag, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { categoryService } from "@/lib/categoryService";
-import type { Category } from "@/lib/categoryService";
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  products: number;
+  active: boolean;
+}
+
+const initialCategories: Category[] = [
+  { id: 1, name: "Kaftans", slug: "kaftans", products: 24, active: true },
+  { id: 2, name: "Dresses", slug: "dresses", products: 42, active: true },
+  { id: 3, name: "Co-Ords", slug: "co-ords", products: 18, active: true },
+  { id: 4, name: "Tops", slug: "tops", products: 15, active: true },
+  { id: 5, name: "Bottoms", slug: "bottoms", products: 12, active: true },
+  { id: 6, name: "Capes", slug: "capes", products: 8, active: true },
+  { id: 7, name: "Blazers", slug: "blazers", products: 10, active: true },
+  { id: 8, name: "Swimwear", slug: "swimwear", products: 6, active: false },
+  { id: 9, name: "Jumpsuits", slug: "jumpsuits", products: 9, active: true },
+];
 
 const AdminCategories = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState(initialCategories);
   const [showModal, setShowModal] = useState(false);
   const [editCat, setEditCat] = useState<Category | null>(null);
   const [form, setForm] = useState({ name: "", slug: "" });
-  const [productCounts, setProductCounts] = useState<Record<string, number>>({});
-
-  // Load categories from database
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
-    try {
-      setLoading(true);
-      const [cats, counts] = await Promise.all([
-        categoryService.getCategories(),
-        categoryService.getCategoryProductCounts()
-      ]);
-      setCategories(cats);
-      setProductCounts(counts);
-    } catch (error) {
-      console.error('Error loading categories:', error);
-      toast({ title: "Error loading categories", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const openAdd = () => { setEditCat(null); setForm({ name: "", slug: "" }); setShowModal(true); };
   const openEdit = (c: Category) => { setEditCat(c); setForm({ name: c.name, slug: c.slug }); setShowModal(true); };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.name) { toast({ title: "Name is required", variant: "destructive" }); return; }
-    const slug = form.slug || form.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, '');
-    
-    try {
-      if (editCat) {
-        await categoryService.updateCategory(editCat.id, { name: form.name, slug });
-        toast({ title: "Category updated!" });
-      } else {
-        await categoryService.createCategory({ name: form.name, slug, active: true, sort_order: categories.length });
-        toast({ title: "Category added!" });
-      }
-      setShowModal(false);
-      loadCategories();
-    } catch (error) {
-      console.error('Error saving category:', error);
-      toast({ title: "Error saving category", variant: "destructive" });
+    const slug = form.slug || form.name.toLowerCase().replace(/\s+/g, "-");
+    if (editCat) {
+      setCategories(categories.map(c => c.id === editCat.id ? { ...c, name: form.name, slug } : c));
+      toast({ title: "Category updated!" });
+    } else {
+      setCategories([...categories, { id: Date.now(), name: form.name, slug, products: 0, active: true }]);
+      toast({ title: "Category added!" });
     }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await categoryService.deleteCategory(id);
-      toast({ title: "Category deleted" });
-      loadCategories();
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      toast({ title: "Error deleting category", variant: "destructive" });
-    }
-  };
-
-  const handleToggleActive = async (cat: Category) => {
-    try {
-      await categoryService.updateCategory(cat.id, { active: !cat.active });
-      setCategories(categories.map(c => c.id === cat.id ? { ...c, active: !c.active } : c));
-    } catch (error) {
-      console.error('Error updating category:', error);
-      toast({ title: "Error updating category", variant: "destructive" });
-    }
+    setShowModal(false);
   };
 
   return (
@@ -105,31 +71,25 @@ const AdminCategories = () => {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr><td colSpan={5} className="px-4 py-12 text-center"><p className="font-body text-sm text-muted-foreground">Loading...</p></td></tr>
-            ) : categories.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-12 text-center"><p className="font-body text-sm text-muted-foreground">No categories found</p></td></tr>
-            ) : (
-              categories.map(c => (
-                <tr key={c.id} className="border-b border-border hover:bg-secondary/20 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"><Tag size={14} className="text-primary" /></div>
-                      <span className="font-body text-sm font-medium text-foreground">{c.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-body text-sm text-muted-foreground hidden sm:table-cell">/{c.slug}</td>
-                  <td className="px-4 py-3 font-body text-sm text-foreground">{productCounts[c.name] || 0}</td>
-                  <td className="px-4 py-3"><Switch checked={c.active} onCheckedChange={() => handleToggleActive(c)} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => openEdit(c)} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground"><Edit2 size={14} /></button>
-                      <button onClick={() => handleDelete(c.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><Trash2 size={14} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
+            {categories.map(c => (
+              <tr key={c.id} className="border-b border-border hover:bg-secondary/20 transition-colors">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"><Tag size={14} className="text-primary" /></div>
+                    <span className="font-body text-sm font-medium text-foreground">{c.name}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 font-body text-sm text-muted-foreground hidden sm:table-cell">/{c.slug}</td>
+                <td className="px-4 py-3 font-body text-sm text-foreground">{c.products}</td>
+                <td className="px-4 py-3"><Switch checked={c.active} onCheckedChange={() => setCategories(categories.map(x => x.id === c.id ? { ...x, active: !x.active } : x))} /></td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-1">
+                    <button onClick={() => openEdit(c)} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground"><Edit2 size={14} /></button>
+                    <button onClick={() => { setCategories(categories.filter(x => x.id !== c.id)); toast({ title: "Deleted" }); }} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><Trash2 size={14} /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

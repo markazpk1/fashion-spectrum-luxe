@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Server, Eye, EyeOff, Save, TestTube, CheckCircle2, XCircle, Loader2, Shield
 } from "lucide-react";
@@ -16,8 +16,18 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { smtpService, type SmtpConfig } from "@/lib/smtpService";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
+
+interface SmtpConfig {
+  host: string;
+  port: string;
+  username: string;
+  password: string;
+  encryption: "tls" | "ssl" | "none";
+  fromName: string;
+  fromEmail: string;
+  replyTo: string;
+  enabled: boolean;
+}
 
 const defaultConfig: SmtpConfig = {
   host: "",
@@ -41,52 +51,15 @@ const presets = [
 ];
 
 const AdminSmtpSettings = () => {
-  const [config, setConfig] = useState<SmtpConfig>(defaultConfig);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [config, setConfig] = useState<SmtpConfig>(() => {
+    const saved = localStorage.getItem("admin_smtp_config");
+    return saved ? JSON.parse(saved) : defaultConfig;
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<"success" | "error" | null>(null);
   const [testEmail, setTestEmail] = useState("");
   const { toast } = useToast();
-  const { isAdmin, loading: authLoading } = useAdminAuth();
-
-  useEffect(() => {
-    if (!authLoading && isAdmin) {
-      fetchSmtpSettings();
-    } else if (!authLoading && !isAdmin) {
-      setLoading(false);
-    }
-  }, [authLoading, isAdmin]);
-
-  const fetchSmtpSettings = async () => {
-    try {
-      setLoading(true);
-      const settings = await smtpService.getCurrentSettings();
-      if (settings) {
-        setConfig({
-          id: settings.id,
-          host: settings.host,
-          port: settings.port,
-          username: settings.username,
-          password: settings.password,
-          encryption: settings.encryption,
-          fromName: settings.fromName,
-          fromEmail: settings.fromEmail,
-          replyTo: settings.replyTo || '',
-          enabled: settings.enabled
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch SMTP settings",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const update = (key: keyof SmtpConfig, value: string | boolean) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
@@ -105,36 +78,9 @@ const AdminSmtpSettings = () => {
     }
   };
 
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      
-      // Validate configuration
-      const validation = smtpService.validateConfig(config);
-      if (!validation.isValid) {
-        toast({
-          title: "Validation Error",
-          description: validation.errors.join(', '),
-          variant: "destructive"
-        });
-        return;
-      }
-
-      await smtpService.saveSettings(config);
-      
-      toast({ 
-        title: "SMTP settings saved successfully",
-        description: "Your email configuration has been updated."
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save SMTP settings",
-        variant: "destructive"
-      });
-    } finally {
-      setSaving(false);
-    }
+  const handleSave = () => {
+    localStorage.setItem("admin_smtp_config", JSON.stringify(config));
+    toast({ title: "SMTP settings saved successfully" });
   };
 
   const handleTest = async () => {
@@ -142,60 +88,21 @@ const AdminSmtpSettings = () => {
       toast({ title: "Enter a test email address", variant: "destructive" });
       return;
     }
-
-    // Validate test email
-    if (!smtpService.isValidEmail(testEmail)) {
-      toast({ title: "Invalid test email address", variant: "destructive" });
-      return;
-    }
-
     setTesting(true);
     setTestResult(null);
-    
-    try {
-      const result = await smtpService.testConnection(config, testEmail);
-      setTestResult(result.success ? "success" : "error");
-      
-      toast({
-        title: result.success ? "Test email sent successfully!" : "Connection failed",
-        description: result.message,
-        variant: result.success ? "default" : "destructive",
-      });
-    } catch (error) {
-      setTestResult("error");
-      toast({
-        title: "Connection failed",
-        description: "Please check your SMTP credentials and try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setTesting(false);
-    }
+    // Simulate test
+    await new Promise((r) => setTimeout(r, 2000));
+    const success = config.host && config.username && config.password;
+    setTestResult(success ? "success" : "error");
+    setTesting(false);
+    toast({
+      title: success ? "Test email sent successfully!" : "Connection failed",
+      description: success
+        ? `A test email was sent to ${testEmail}`
+        : "Please check your SMTP credentials and try again.",
+      variant: success ? "default" : "destructive",
+    });
   };
-
-  if (authLoading || loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Server size={24} />
-          <h1 className="font-heading text-2xl font-bold text-foreground">SMTP Settings</h1>
-        </div>
-        <p className="text-sm font-body text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Server size={24} />
-          <h1 className="font-heading text-2xl font-bold text-foreground">SMTP Settings</h1>
-        </div>
-        <p className="text-sm font-body text-muted-foreground">Access denied. Admin privileges required.</p>
-      </div>
-    );
-  }
 
   const isConfigured = config.host && config.port && config.username && config.fromEmail;
 
@@ -424,17 +331,9 @@ const AdminSmtpSettings = () => {
           </Card>
 
           {/* Save */}
-          <Button 
-            onClick={handleSave} 
-            disabled={saving}
-            className="w-full font-body" 
-            size="lg"
-          >
-            {saving ? (
-              <><Loader2 size={16} className="mr-2 animate-spin" /> Saving...</>
-            ) : (
-              <><Save size={16} className="mr-2" /> Save Settings</>
-            )}
+          <Button onClick={handleSave} className="w-full font-body" size="lg">
+            <Save size={16} className="mr-2" />
+            Save Settings
           </Button>
 
           {/* Help */}

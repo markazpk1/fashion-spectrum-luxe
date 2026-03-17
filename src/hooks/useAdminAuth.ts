@@ -10,16 +10,17 @@ export const useAdminAuth = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        console.log('Auth state changed:', _event, session?.user?.email);
-        
         const currentUser = session?.user ?? null;
         setUser(currentUser);
 
         if (currentUser) {
-          // Check admin role from user metadata
-          const isAdminUser = currentUser.user_metadata?.role === 'admin';
-          setIsAdmin(isAdminUser);
-          console.log('Admin role checked:', isAdminUser);
+          const { data } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", currentUser.id)
+            .eq("role", "admin")
+            .maybeSingle();
+          setIsAdmin(!!data);
         } else {
           setIsAdmin(false);
         }
@@ -27,30 +28,21 @@ export const useAdminAuth = () => {
       }
     );
 
-    // Initial session check
-    const checkInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
 
-        if (currentUser) {
-          // Check admin role from user metadata
-          const isAdminUser = currentUser.user_metadata?.role === 'admin';
-          setIsAdmin(isAdminUser);
-          console.log('Admin role checked:', isAdminUser);
-        } else {
-          setIsAdmin(false);
-        }
-      } catch (error) {
-        console.error('Error checking initial session:', error);
-        setIsAdmin(false);
-      } finally {
-        setLoading(false);
+      if (currentUser) {
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", currentUser.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        setIsAdmin(!!data);
       }
-    };
-
-    checkInitialSession();
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);

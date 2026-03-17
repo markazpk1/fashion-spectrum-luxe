@@ -45,6 +45,22 @@ import paradise44 from "@/assets/paradise/paradise-44.jpg";
 import paradise45 from "@/assets/paradise/paradise-45.jpg";
 import paradise46 from "@/assets/paradise/paradise-46.jpg";
 import paradise47 from "@/assets/paradise/paradise-47.jpg";
+import paradise48 from "@/assets/paradise/paradise-48.jpg";
+import paradise49 from "@/assets/paradise/paradise-49.jpg";
+import paradise50 from "@/assets/paradise/paradise-50.jpg";
+import paradise51 from "@/assets/paradise/paradise-51.jpg";
+import paradise52 from "@/assets/paradise/paradise-52.jpg";
+import paradise53 from "@/assets/paradise/paradise-53.jpg";
+import paradise54 from "@/assets/paradise/paradise-54.jpg";
+import paradise55 from "@/assets/paradise/paradise-55.jpg";
+import paradise56 from "@/assets/paradise/paradise-56.jpg";
+import paradise57 from "@/assets/paradise/paradise-57.jpg";
+import paradise58 from "@/assets/paradise/paradise-58.jpg";
+import paradise59 from "@/assets/paradise/paradise-59.jpg";
+import paradise60 from "@/assets/paradise/paradise-60.jpg";
+import paradise61 from "@/assets/paradise/paradise-61.jpg";
+import paradise62 from "@/assets/paradise/paradise-62.jpg";
+import paradise63 from "@/assets/paradise/paradise-63.jpg";
 
 import { Product } from "./products";
 
@@ -123,4 +139,30 @@ export const paradiseProducts: Product[] = [
   { id: "pr45", name: "Zahara Pink Gypsy Top", image: paradise45, badge: "New in", category: "Gypsy Top", style: "Gypsy Top", color: "Pink" },
   { id: "pr46", name: "Zahara Pink Palazzo Pant", image: paradise46, badge: "New in", category: "Plazo Pant", style: "Plazo Pant", color: "Pink" },
   { id: "pr47", name: "Zahara Pink Short Jacket", image: paradise47, badge: "New in", category: "Short Jacket", style: "Short Jacket", color: "Pink" },
+
+  // Zahara Pink (continued)
+  { id: "pr48", name: "Zahara Pink Tank Top", image: paradise48, badge: "New in", category: "Tank Top", style: "Tank Top", color: "Pink" },
+
+  // Monet Orange
+  { id: "pr49", name: "Monet Orange Hi-Low Dress", image: paradise49, badge: "New in", category: "Hi-Low Dress", style: "High-Low Dress", color: "Orange" },
+  { id: "pr50", name: "Monet Orange Wrap Pant", image: paradise50, badge: "New in", category: "Wrap Pant", style: "Wrap Pant", color: "Orange" },
+  { id: "pr51", name: "Monet Orange Long Box Kaftan", image: paradise51, badge: "New in", category: "Long Box Kaftan", style: "Long Box Kaftan", color: "Orange" },
+  { id: "pr52", name: "Monet Orange Tunic Dress", image: paradise52, badge: "New in", category: "Tunic Dress", style: "Tunic Dress", color: "Orange" },
+  { id: "pr53", name: "Monet Orange Gypsy Top", image: paradise53, badge: "New in", category: "Gypsy Top", style: "Gypsy Top", color: "Orange" },
+  { id: "pr54", name: "Monet Orange Tank Top", image: paradise54, badge: "New in", category: "Tank Top", style: "Tank Top", color: "Orange" },
+  { id: "pr55", name: "Monet Orange Short Jacket", image: paradise55, badge: "New in", category: "Short Jacket", style: "Short Jacket", color: "Orange" },
+  { id: "pr56", name: "Monet Orange Shirt", image: paradise56, badge: "New in", category: "Shirt", style: "Shirt", color: "Orange" },
+
+  // Marigold Aqua Brown
+  { id: "pr57", name: "Marigold Aqua Brown Short Kaftan", image: paradise57, badge: "New in", category: "Short Kaftan", style: "Short Kaftan", color: "Aqua Brown" },
+  { id: "pr58", name: "Marigold Aqua Brown Long Shirt Dress", image: paradise58, badge: "New in", category: "Long Shirt Dress", style: "Long Shirt Dress", color: "Aqua Brown" },
+
+  // Garden Delight
+  { id: "pr59", name: "Garden Delight Long Kaftan - Coral", image: paradise59, badge: "New in", category: "Long Kaftan", style: "Long Kaftan", color: "Coral" },
+  { id: "pr60", name: "Garden Delight Long Kaftan - Aqua", image: paradise60, badge: "New in", category: "Long Kaftan", style: "Long Kaftan", color: "Aqua" },
+  { id: "pr61", name: "Garden Delight Shirt", image: paradise61, badge: "New in", category: "Shirt", style: "Shirt", color: "Aqua" },
+
+  // Tiger Brown
+  { id: "pr62", name: "Tiger Brown Short Kaftan", image: paradise62, badge: "New in", category: "Short Kaftan", style: "Short Kaftan", color: "Brown" },
+  { id: "pr63", name: "Tiger Brown Short Frill Dress", image: paradise63, badge: "New in", category: "Short Frill Dress", style: "Short Frill Dress", color: "Brown" },
 ];

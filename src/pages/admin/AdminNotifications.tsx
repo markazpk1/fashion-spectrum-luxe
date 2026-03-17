@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Bell, Search, Filter, ShoppingCart, Users, Package, AlertTriangle,
   Trash2, Check, CheckCheck, ChevronDown, X, BellOff
@@ -28,11 +28,40 @@ import {
 import { cn } from "@/lib/utils";
 import { playNotificationSound } from "@/lib/notificationSound";
 import { useToast } from "@/hooks/use-toast";
-import { notificationService, type Notification } from "@/lib/notificationService";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type NotificationType = "order" | "customer" | "inventory" | "alert";
 type NotificationStatus = "all" | "unread" | "read";
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  date: string;
+  read: boolean;
+  type: NotificationType;
+}
+
+const allNotifications: Notification[] = [
+  { id: "1", title: "Payment Failed", message: "Order #1039 payment was declined. Customer: Chidi Eze. Amount: ₦120,000", time: "2 min ago", date: "2026-02-27", read: false, type: "alert" },
+  { id: "2", title: "New Order #1042", message: "Sarah Johnson placed an order for ₦85,000. Items: Royal Blue Agbada, Gold Kaftan", time: "5 min ago", date: "2026-02-27", read: false, type: "order" },
+  { id: "3", title: "Low Stock Alert", message: "Royal Blue Agbada is running low — only 3 units remaining in stock", time: "15 min ago", date: "2026-02-27", read: false, type: "inventory" },
+  { id: "4", title: "New Customer", message: "Amara Obi just created an account and signed up for the newsletter", time: "1 hour ago", date: "2026-02-27", read: false, type: "customer" },
+  { id: "5", title: "Refund Requested", message: "Customer Bola Adeyemi requested a refund for Order #1035 — Reason: Wrong size", time: "2 hours ago", date: "2026-02-27", read: true, type: "alert" },
+  { id: "6", title: "Order Shipped", message: "Order #1038 has been shipped via DHL Express. Tracking: NG12345678", time: "3 hours ago", date: "2026-02-27", read: true, type: "order" },
+  { id: "7", title: "New Order #1041", message: "Fatima Hassan placed an order for ₦45,000. Items: Embroidered Cap", time: "4 hours ago", date: "2026-02-27", read: true, type: "order" },
+  { id: "8", title: "Out of Stock", message: "Traditional Wedding Agbada is now out of stock — 5 customers waitlisted", time: "5 hours ago", date: "2026-02-27", read: true, type: "inventory" },
+  { id: "9", title: "New Customer", message: "Ngozi Okafor created an account from Instagram referral", time: "6 hours ago", date: "2026-02-27", read: true, type: "customer" },
+  { id: "10", title: "Order Delivered", message: "Order #1035 was delivered successfully. Customer confirmed receipt", time: "8 hours ago", date: "2026-02-26", read: true, type: "order" },
+  { id: "11", title: "Payment Failed", message: "Order #1033 payment failed — Card expired. Customer: Tunde Bakare", time: "10 hours ago", date: "2026-02-26", read: true, type: "alert" },
+  { id: "12", title: "Bulk Order Inquiry", message: "Corporate client requested quote for 50 units of Senator wear", time: "12 hours ago", date: "2026-02-26", read: true, type: "customer" },
+  { id: "13", title: "New Order #1040", message: "Kemi Afolabi placed an order for ₦200,000. Items: Luxury Lace Set", time: "14 hours ago", date: "2026-02-26", read: true, type: "order" },
+  { id: "14", title: "Inventory Restocked", message: "Classic White Agbada restocked — 25 units added to inventory", time: "1 day ago", date: "2026-02-26", read: true, type: "inventory" },
+  { id: "15", title: "Suspicious Activity", message: "Multiple failed login attempts detected from IP 192.168.1.45", time: "1 day ago", date: "2026-02-26", read: true, type: "alert" },
+  { id: "16", title: "New Order #1039", message: "Emeka Nwosu placed an order for ₦65,000. Items: Casual Kaftan Set", time: "2 days ago", date: "2026-02-25", read: true, type: "order" },
+  { id: "17", title: "Customer Feedback", message: "5-star review received from Aisha Mohammed for Gold Embroidered Agbada", time: "2 days ago", date: "2026-02-25", read: true, type: "customer" },
+  { id: "18", title: "Low Stock Alert", message: "Silver Threaded Kaftan running low — only 2 units remaining", time: "3 days ago", date: "2026-02-24", read: true, type: "inventory" },
+];
 
 const typeConfig: Record<NotificationType, { icon: typeof Bell; label: string; color: string; badgeColor: string }> = {
   order: { icon: ShoppingCart, label: "Orders", color: "text-primary bg-primary/10", badgeColor: "bg-primary/10 text-primary border-primary/20" },
@@ -42,23 +71,12 @@ const typeConfig: Record<NotificationType, { icon: typeof Bell; label: string; c
 };
 
 const AdminNotifications = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState<Notification[]>(allNotifications);
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<Notification["type"] | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "unread" | "read">("all");
+  const [typeFilter, setTypeFilter] = useState<NotificationType | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<NotificationStatus>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
-  const { isAdmin, loading: authLoading } = useAdminAuth();
-
-  useEffect(() => {
-    if (!authLoading && isAdmin) {
-      fetchNotifications();
-      subscribeToNotifications();
-    } else if (!authLoading && !isAdmin) {
-      setLoading(false);
-    }
-  }, [authLoading, isAdmin]);
 
   // Filtered notifications
   const filtered = useMemo(() => {
@@ -74,120 +92,19 @@ const AdminNotifications = () => {
     });
   }, [notifications, typeFilter, statusFilter, search]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-  const allSelected = filtered.length > 0 && filtered.every((n) => selectedIds.has(n.id));
-
   // Group by date
   const grouped = useMemo(() => {
     const groups: Record<string, Notification[]> = {};
     filtered.forEach((n) => {
-      const label = formatDate(n.created_at);
+      const label = n.date === "2026-02-27" ? "Today" : n.date === "2026-02-26" ? "Yesterday" : n.date;
       if (!groups[label]) groups[label] = [];
       groups[label].push(n);
     });
     return groups;
   }, [filtered]);
 
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      const data = await notificationService.getNotifications();
-      setNotifications(data);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch notifications",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const subscribeToNotifications = () => {
-    const subscription = notificationService.subscribeToNotifications((payload) => {
-      if (payload.eventType === 'INSERT') {
-        const newNotification = payload.new as Notification;
-        setNotifications(prev => [newNotification, ...prev]);
-        // Play sound for new notifications
-        playNotificationSound(newNotification.type === 'alert' ? 'critical' : 'info');
-      } else if (payload.eventType === 'UPDATE') {
-        const updatedNotification = payload.new as Notification;
-        setNotifications(prev => 
-          prev.map(n => n.id === updatedNotification.id ? updatedNotification : n)
-        );
-      } else if (payload.eventType === 'DELETE') {
-        const deletedId = payload.old.id;
-        setNotifications(prev => prev.filter(n => n.id !== deletedId));
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-      return "Today";
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return "Yesterday";
-    } else {
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
-      });
-    }
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins} min ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    return formatDate(dateString);
-  };
-
-  if (authLoading || loading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
-            <Bell size={24} />
-            Notifications
-          </h1>
-          <p className="text-sm font-body text-muted-foreground mt-1">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
-            <Bell size={24} />
-            Notifications
-          </h1>
-          <p className="text-sm font-body text-muted-foreground mt-1">Access denied. Admin privileges required.</p>
-        </div>
-      </div>
-    );
-  }
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const allSelected = filtered.length > 0 && filtered.every((n) => selectedIds.has(n.id));
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -205,114 +122,49 @@ const AdminNotifications = () => {
     }
   };
 
-  const markSelectedRead = async () => {
-    try {
-      await notificationService.markMultipleAsRead(Array.from(selectedIds));
-      setNotifications((prev) =>
-        prev.map((n) => (selectedIds.has(n.id) ? { ...n, read: true } : n))
-      );
-      toast({ title: `${selectedIds.size} notification(s) marked as read` });
-      setSelectedIds(new Set());
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to mark notifications as read",
-        variant: "destructive"
-      });
-    }
+  const markSelectedRead = () => {
+    setNotifications((prev) =>
+      prev.map((n) => (selectedIds.has(n.id) ? { ...n, read: true } : n))
+    );
+    toast({ title: `${selectedIds.size} notification(s) marked as read` });
+    setSelectedIds(new Set());
   };
 
-  const markSelectedUnread = async () => {
-    try {
-      for (const id of selectedIds) {
-        await notificationService.toggleReadStatus(id, false);
-      }
-      setNotifications((prev) =>
-        prev.map((n) => (selectedIds.has(n.id) ? { ...n, read: false } : n))
-      );
-      toast({ title: `${selectedIds.size} notification(s) marked as unread` });
-      setSelectedIds(new Set());
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to mark notifications as unread",
-        variant: "destructive"
-      });
-    }
+  const markSelectedUnread = () => {
+    setNotifications((prev) =>
+      prev.map((n) => (selectedIds.has(n.id) ? { ...n, read: false } : n))
+    );
+    toast({ title: `${selectedIds.size} notification(s) marked as unread` });
+    setSelectedIds(new Set());
   };
 
-  const deleteSelected = async () => {
-    try {
-      await notificationService.deleteMultipleNotifications(Array.from(selectedIds));
-      setNotifications((prev) => prev.filter((n) => !selectedIds.has(n.id)));
-      toast({ title: `${selectedIds.size} notification(s) deleted` });
-      setSelectedIds(new Set());
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete notifications",
-        variant: "destructive"
-      });
-    }
+  const deleteSelected = () => {
+    setNotifications((prev) => prev.filter((n) => !selectedIds.has(n.id)));
+    toast({ title: `${selectedIds.size} notification(s) deleted` });
+    setSelectedIds(new Set());
   };
 
-  const markAllRead = async () => {
-    try {
-      await notificationService.markAllAsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      toast({ title: "All notifications marked as read" });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to mark all notifications as read",
-        variant: "destructive"
-      });
-    }
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    toast({ title: "All notifications marked as read" });
   };
 
-  const clearAll = async () => {
-    try {
-      await notificationService.deleteAllNotifications();
-      setNotifications([]);
-      setSelectedIds(new Set());
-      toast({ title: "All notifications cleared" });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to clear notifications",
-        variant: "destructive"
-      });
-    }
+  const clearAll = () => {
+    setNotifications([]);
+    setSelectedIds(new Set());
+    toast({ title: "All notifications cleared" });
   };
 
-  const markAsRead = async (id: string) => {
-    try {
-      await notificationService.markAsRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-      );
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to mark notification as read",
-        variant: "destructive"
-      });
-    }
+  const markAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
   };
 
-  const removeNotification = async (id: string) => {
-    try {
-      await notificationService.deleteNotification(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      selectedIds.delete(id);
-      setSelectedIds(new Set(selectedIds));
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete notification",
-        variant: "destructive"
-      });
-    }
+  const removeNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    selectedIds.delete(id);
+    setSelectedIds(new Set(selectedIds));
   };
 
   return (
@@ -599,7 +451,7 @@ const AdminNotifications = () => {
                         {notification.message}
                       </p>
                       <p className="text-xs font-body text-muted-foreground/60 mt-1">
-                        {formatTime(notification.created_at)}
+                        {notification.time}
                       </p>
                     </div>
 
